@@ -1,0 +1,11 @@
+{
+  "name": "shit-list",
+  "version": "1.0.0",
+  "description": "An app, built on DAT, that enables users to publish decentralized data sets around their newborn's feeding, sleeping, and shitting",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Patrick McGill (@pqmcgill)",
+  "license": "MIT"
+}
