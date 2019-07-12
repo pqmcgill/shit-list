@@ -1,18 +1,3 @@
-/**
- * TODO
- * 
- * done - spin up a webserver
- * done - serve public folder over http
- * done - spin up a websocket server
- * create a channel that uses a dynamic segment representing an archive key
- * create a new archive with hyperdb backend
- * join the archive to hyperdiscovery
- * done - wrap the socket in a duplex stream
- * replicate the archive over the stream
- * nice to have: manage active archive cache
- * nice to have: debug logs
- */
-
 const express = require('express')
 const path = require('path')
 const wss = require('websocket-stream')
