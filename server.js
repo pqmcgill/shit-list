@@ -14,11 +14,14 @@
  */
 
 const express = require('express')
+const WebSocketServer = require('ws').Server
+const http = require('http')
 const path = require('path')
 
-const PORT = 4000
+const PORT = process.env.PORT || 4000
 
 const app = express()
+const server = http.createServer(app)
 
 app.use(express.static(__dirname + '/build'))
 
@@ -26,6 +29,13 @@ app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname + '/build/index.html'))
 })
 
-app.listen(PORT, () => {
-  console.log(`Listening on port ${PORT}`)
+server.listen(PORT, (err) => {
+  if (err) throw err
+  console.log('Listening on port: ' + PORT)
+})
+
+const wss = new WebSocketServer({ server })
+
+wss.on('connection', (socket) => {
+  console.log('connected via ws!')
 })
