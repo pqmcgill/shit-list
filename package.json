@@ -7,6 +7,7 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
+    "websocket-stream": "^5.5.0",
     "ws": "^7.1.0"
   },
   "scripts": {
