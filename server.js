@@ -3,7 +3,7 @@
  * 
  * done - spin up a webserver
  * done - serve public folder over http
- * spin up a websocket server
+ * done - spin up a websocket server
  * create a channel that uses a dynamic segment representing an archive key
  * create a new archive with hyperdb backend
  * join the archive to hyperdiscovery
