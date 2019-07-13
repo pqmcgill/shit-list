@@ -33,9 +33,12 @@ export default function hyperDriver(sink$) {
           cache[name].reads[path].imitate(read$)
         })
 
+        // TODO: connect to peers
         //// activate peer stream
         //const peer$ = createPeerStream(dat, archive)
         //cache[name].peer$.imitate(peer$)
+        
+        connectToGateway(archive)
       }
     }
   })
@@ -126,3 +129,22 @@ function createKeyStream(archive) {
   })
 }
 
+function connectToGateway(archive) {
+  archive.ready(() => {
+    const key = archive.key.toString('hex')
+    const stream = websocketStream(`ws://localhost:4000/archive/${key}`)
+    const replicationStream = archive.replicate({
+      live: true,
+      sparse: true
+    })
+
+    pump(
+      stream,
+      replicationStream,
+      stream,
+      err => {
+        console.log('pipe finished', err)
+      }
+    )
+  })
+}
