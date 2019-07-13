@@ -21,6 +21,7 @@
 
  ## Nice to haves (in no particular order)
 
+ * qr codes for swaping keys
  * connect to discovery swarm
  * offline mode
  * PWA (home screen icon, service worker, push notifications, etc.)
