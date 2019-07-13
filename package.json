@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@cycle/history": "^7.2.0",
+    "@cycle/react": "^2.1.0",
+    "@cycle/react-dom": "^2.2.0",
+    "@cycle/run": "^5.2.0",
     "express": "^4.17.1",
     "express-ws": "^4.0.0",
     "hyperdrive": "git+https://github.com/mafintosh/hyperdrive.git#hyperdb-backend",
@@ -12,7 +16,8 @@
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
     "websocket-stream": "^5.5.0",
-    "ws": "^7.1.0"
+    "ws": "^7.1.0",
+    "xstream": "^11.11.0"
   },
   "scripts": {
     "start": "react-scripts start",
