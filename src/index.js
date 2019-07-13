@@ -1,13 +1,15 @@
 import * as serviceWorker from './serviceWorker'
 import { run } from '@cycle/run'
 import { makeDOMDriver } from '@cycle/react-dom'
+import hyperDriver from './hyperDriver'
 import App from './App'
 
 // TODO: remove eventually.
-import './poc-tmp'
+//import './poc-tmp'
 
 const drivers = {
-  DOM: makeDOMDriver(document.querySelector('#root'))
+  DOM: makeDOMDriver(document.querySelector('#root')),
+  HYPER: hyperDriver
 }
 
 run(App, drivers)
