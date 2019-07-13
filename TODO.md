@@ -5,7 +5,7 @@
  * ~~spin up a websocket server~~
  * ~~wrap the socket in a duplex stream~~
  * ~~replicate archive via websocket proxy~~
- * hyperdb
+ * ~~hyperdb~~
  * cyclejs <--> hyperdrive driver
  * domain modeling
  * my shit lists page
