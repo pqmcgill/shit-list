@@ -1,18 +1,48 @@
 import React from 'react'
+import wsStream from 'websocket-stream'
+import hyperdrive from 'hyperdrive'
+import RAM from 'random-access-memory'
+import pump from 'pump'
 
-const ws = new WebSocket('ws://localhost:4000')
-ws.addEventListener('open', () => {
-  console.log('sending: helloworld')
-  ws.send('helloworld')
-})
+let archive
 
-ws.addEventListener('message', ({ data }) => {
-  const reader = new FileReader()
-  reader.addEventListener('loadend', e => {
-    const msg = e.srcElement.result
-    console.log('received: ' + msg)
+if (window.location.hash.length > 0) {
+  const key = window.location.hash.split('#')[1]
+  archive = hyperdrive(RAM, key)
+  archive.ready(() => {
+    archive.readFile('/test.txt', 'utf-8', (err, data) => {
+      if (err) throw err
+      console.log('read', data)
+    })
   })
-  reader.readAsText(data)
+} else {
+  archive = hyperdrive(RAM)
+  archive.ready(() => {
+    console.log('key', archive.key.toString('hex'))
+    archive.writeFile('/test.txt', 'helloworld', 'utf-8', (err) => {
+      if (err) throw err
+      console.log('wrote!')
+    })
+  })
+}
+
+
+archive.ready(() => {
+  const key = archive.key.toString('hex')
+  const stream = wsStream(`ws://localhost:4000/archive/${key}`)
+  const replicationStream = archive.replicate({
+    live: true,
+    sparse: true
+  })
+
+  pump(
+    stream,
+    replicationStream,
+    stream,
+    err => {
+      console.log('pipe finished', err)
+    }
+  )
 })
 
 export default function() {
