@@ -5,7 +5,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "express-ws": "^4.0.0",
-    "hyperdrive": "^9.15.0",
+    "hyperdrive": "git+https://github.com/mafintosh/hyperdrive.git#hyperdb-backend",
     "pump": "^3.0.0",
     "random-access-memory": "^3.1.1",
     "react": "^16.8.6",
