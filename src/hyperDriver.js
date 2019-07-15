@@ -1,4 +1,6 @@
+
 import xs from 'xstream'
+import dropRepeats from 'xstream/extra/dropRepeats'
 import hyperdrive from 'hyperdrive'
 import ram from 'random-access-memory'
 import websocketStream from 'websocket-stream'
@@ -10,6 +12,8 @@ export default function hyperDriver(sink$) {
   const open$ = sink$.filter(({ type }) => type === 'open')
 
   const write$ = sink$.filter(({ type }) => type === 'write')
+
+  const authorization$ = sink$.filter(({ type }) => type === 'authorize')
 
   open$.subscribe({
     next({ name, key, persist }) {
@@ -23,14 +27,28 @@ export default function hyperDriver(sink$) {
 
         cache[name].archive = archive
 
-        // activate key stream
-        const key$ = createKeyStream(archive)
-        cache[name].key$.imitate(key$)
+        // activate archive stream
+        archive.ready(() => {
+          cache[name].archive$._n(archive)
+        });
+
+        const authorized$ = createAuthStream(archive)
+        authorized$
+          .compose(dropRepeats())
+          .subscribe({
+            next(v) {
+              cache[name].authorized$._n(v)
+            }
+          })
 
         // activate read streams
         Object.keys(cache[name].reads).forEach(path => {
           const read$ = createReadStream(path, archive)
-          cache[name].reads[path].imitate(read$)
+          read$.subscribe({
+            next(v) {
+              cache[name].reads[path]._n(v)
+            }
+          })
         })
 
         // TODO: connect to peers
@@ -50,7 +68,21 @@ export default function hyperDriver(sink$) {
         archive.ready(() => {
           archive.writeFile(path, data, function(err) {
             if (err) throw err
-            console.log('wrote!')
+          })
+        })
+      } else {
+        throw new Error('archive not opened for ' + name)
+      }
+    }
+  })
+
+  authorization$.subscribe({
+    next({ name, key }) {
+      const archive = cache[name].archive
+      if (archive) {
+        archive.ready(() => {
+          archive.db.authorize(Buffer.from(key, 'hex'), (err) => {
+            if (err) throw err
           })
         })
       } else {
@@ -63,10 +95,10 @@ export default function hyperDriver(sink$) {
     select(archiveName) {
       if (!cache[archiveName]) {
         cache[archiveName] = {
-          archive: null,
           reads: {},
           peer$: xs.create(),
-          key$: xs.create()
+          archive$: xs.createWithMemory(),
+          authorized$: xs.createWithMemory()
         }
       }
 
@@ -80,8 +112,8 @@ export default function hyperDriver(sink$) {
         },
 
         peer$: cache[archiveName].peer$,
-
-        key$: cache[archiveName].key$
+        archive$: cache[archiveName].archive$,
+        authorized$: cache[archiveName].authorized$
       } 
     }
   }
@@ -118,12 +150,19 @@ function createPeerStream(dat, archive) {
   })
 }
 
-function createKeyStream(archive) {
+function createAuthStream(archive) {
   return xs.create({
     start(listener) {
       archive.ready(() => {
-        listener.next(archive.key)
+        archive.db.authorized(archive.db.local.key, handleUpdate)
+        archive.db.watch(() => {
+          archive.db.authorized(archive.db.local.key, handleUpdate)
+        })
       })
+      function handleUpdate(err, isAuth) {
+        if (err) return listener.error(err)
+        listener.next(isAuth)
+      }
     },
     stop() {}
   })
