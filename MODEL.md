@@ -7,7 +7,7 @@
 * loggedBy: String *name*
 * entryTime: DateTime
 * panic: Boolean *default=false*
-* notes: String
+* notes?: String
 
 ## TimedEvent<a name="#timedevent"></a> extends [Event](#event)
 * startEventTime: DateTime
@@ -19,3 +19,13 @@
 ## BreastFeedingEvent<a name="breastfeedingevent"></a> extends [TimedEvent](#timedevent)
 * leftBreastDuration: Int *milliseconds*
 * rightBreastDuration: Int *milliseconds*
+
+## PumpFeedingEvent<a name="pumpfeedingevent"></a> extends [TimedEvent](#timedevent)
+* duration: Int *milliseconds*
+* volumeProduced: Int *milliliters*
+
+## DiaperEvent<a name="diaperevent"></a> extends [StaticEvent](#staticevent)
+* resultType: Enum<Wet|Shitty|Mixed|Dry>
+* color?: String *hex RGB color* 
+
+
