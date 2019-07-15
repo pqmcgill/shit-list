@@ -1,3 +1,4 @@
+
 import xs from 'xstream'
 import hyperdrive from 'hyperdrive'
 import ram from 'random-access-memory'
@@ -24,8 +25,7 @@ export default function hyperDriver(sink$) {
         cache[name].archive = archive
 
         // activate key stream
-        const key$ = createKeyStream(archive)
-        cache[name].key$.imitate(key$)
+        cache[name].getArchive = createArchiveFactory(archive)
 
         // activate read streams
         Object.keys(cache[name].reads).forEach(path => {
@@ -63,10 +63,9 @@ export default function hyperDriver(sink$) {
     select(archiveName) {
       if (!cache[archiveName]) {
         cache[archiveName] = {
-          archive: null,
           reads: {},
           peer$: xs.create(),
-          key$: xs.create()
+          archive$: xs.create()
         }
       }
 
@@ -80,8 +79,7 @@ export default function hyperDriver(sink$) {
         },
 
         peer$: cache[archiveName].peer$,
-
-        key$: cache[archiveName].key$
+        archive$: cache[archiveName].archive$
       } 
     }
   }
@@ -118,15 +116,17 @@ function createPeerStream(dat, archive) {
   })
 }
 
-function createKeyStream(archive) {
-  return xs.create({
-    start(listener) {
-      archive.ready(() => {
-        listener.next(archive.key)
-      })
-    },
-    stop() {}
-  })
+function createArchiveFactory(archive) {
+  return function() { 
+    return xs.create({
+      start(listener) {
+        archive.ready(() => {
+          listener.next(archive)
+        })
+      },
+      stop() {}
+    })
+  }
 }
 
 function connectToGateway(archive) {

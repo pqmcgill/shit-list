@@ -3,7 +3,7 @@ import { run } from '@cycle/run'
 import { makeDOMDriver } from '@cycle/react-dom'
 import { makeHistoryDriver } from '@cycle/history'
 import hyperDriver from './hyperDriver'
-import Poc from './Poc'
+import { Auth } from './poc'
 
 // TODO: remove eventually.
 //import './poc-tmp'
@@ -14,7 +14,7 @@ const drivers = {
   HISTORY: makeHistoryDriver()
 }
 
-run(Poc, drivers)
+run(Auth, drivers)
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

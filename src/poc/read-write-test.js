@@ -2,24 +2,15 @@ import xs from 'xstream'
 import delay from 'xstream/extra/delay'
 import { h1, textarea } from '@cycle/react-dom'
 
-export default function App(sources) {
+export default function ReadWriteTest(sources) {
   const hash$ = sources.HISTORY
     .map(({ hash }) => hash)
-
-  const key$ = sources.HYPER
-    .select('my-drive')
-    .key$
-    .map(key => key.toString('hex'))
-    .debug('key')
-    .subscribe({})
 
   const data$ = sources.HYPER
     .select('my-drive')
     .read('/test.txt')
     .map(data => data.toString())
     .debug('reading!')
-
-  const dom$ = xs.of(h1('Shit List'))
 
   const open$ = hash$
     .map(hash => {
@@ -68,7 +59,6 @@ export default function App(sources) {
     }));
 
   return {
-    DOM: dom$,
     HYPER: xs.merge(open$, write$, update$),
     DOM: view$
   }
