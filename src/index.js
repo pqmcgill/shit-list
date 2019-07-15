@@ -3,7 +3,8 @@ import { run } from '@cycle/run'
 import { makeDOMDriver } from '@cycle/react-dom'
 import { makeHistoryDriver } from '@cycle/history'
 import hyperDriver from './hyperDriver'
-import { Auth } from './poc'
+import { makeLevelDriver } from './poc'
+import { LevelTest } from './poc/level-test'
 
 // TODO: remove eventually.
 //import './poc-tmp'
@@ -11,10 +12,11 @@ import { Auth } from './poc'
 const drivers = {
   DOM: makeDOMDriver(document.querySelector('#root')),
   HYPER: hyperDriver,
-  HISTORY: makeHistoryDriver()
+  HISTORY: makeHistoryDriver(),
+  LEVEL: makeLevelDriver('test-db', { prefix: 'shit-list:' })
 }
 
-run(Auth, drivers)
+run(LevelTest, drivers)
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
