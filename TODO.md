@@ -16,6 +16,7 @@
  * data export
  * local persistence (indexedb)
  * user identification
+ * ~~~authorization - poc~~~
  * authorization
  * ship it!
 
