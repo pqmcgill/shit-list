@@ -2,12 +2,9 @@ import * as serviceWorker from './serviceWorker'
 import { run } from '@cycle/run'
 import { makeDOMDriver } from '@cycle/react-dom'
 import { makeHistoryDriver } from '@cycle/history'
-import hyperDriver from './hyperDriver'
-import { makeLevelDriver } from './poc'
+import hyperDriver from './drivers/hyperDriver'
+import makeLevelDriver from './drivers/levelDriver'
 import { LevelTest } from './poc/level-test'
-
-// TODO: remove eventually.
-//import './poc-tmp'
 
 const drivers = {
   DOM: makeDOMDriver(document.querySelector('#root')),

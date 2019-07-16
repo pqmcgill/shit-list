@@ -1,4 +1,3 @@
-
 import xs from 'xstream'
 import dropRepeats from 'xstream/extra/dropRepeats'
 import hyperdrive from 'hyperdrive'
@@ -10,9 +9,7 @@ export default function hyperDriver(sink$) {
   const cache = {};
 
   const open$ = sink$.filter(({ type }) => type === 'open')
-
   const write$ = sink$.filter(({ type }) => type === 'write')
-
   const authorization$ = sink$.filter(({ type }) => type === 'authorize')
 
   open$.subscribe({
@@ -136,19 +133,19 @@ function createReadStream(path, archive) {
 }
 
 
-function createPeerStream(dat, archive) {
-  return xs.create({
-    start(listener) {
-      archive.ready(() => {
-        listener.next()
-        dat.onNetworkActivity(archive, (network) => {
-          listener.next(network)
-        })
-      });
-    },
-    stop() {}
-  })
-}
+//function createPeerStream(dat, archive) {
+//  return xs.create({
+//    start(listener) {
+//      archive.ready(() => {
+//        listener.next()
+//        dat.onNetworkActivity(archive, (network) => {
+//          listener.next(network)
+//        })
+//      });
+//    },
+//    stop() {}
+//  })
+//}
 
 function createAuthStream(archive) {
   return xs.create({

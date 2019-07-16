@@ -14,7 +14,7 @@
  * data entry
  * data dump
  * data export
- * local persistence (indexedb)
+ * ~~local persistence (level-js)~~
  * user identification
  * authorization
  * ship it!
