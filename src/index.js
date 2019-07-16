@@ -4,7 +4,9 @@ import { makeDOMDriver } from '@cycle/react-dom'
 import { makeHistoryDriver } from '@cycle/history'
 import hyperDriver from './drivers/hyperDriver'
 import makeLevelDriver from './drivers/levelDriver'
-import { LevelTest } from './poc/level-test'
+import { routerify } from 'cyclic-router'
+import switchPath from 'switch-path'
+import App from './App'
 
 const drivers = {
   DOM: makeDOMDriver(document.querySelector('#root')),
@@ -13,7 +15,11 @@ const drivers = {
   LEVEL: makeLevelDriver('test-db', { prefix: 'shit-list:' })
 }
 
-run(LevelTest, drivers)
+const Main = routerify(App, switchPath, {
+  historyName: 'HISTORY'
+})
+
+run(Main, drivers)
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
