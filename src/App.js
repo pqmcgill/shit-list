@@ -5,6 +5,7 @@ import { getSink } from './util/getSink'
 import TopBar from './components/TopBar'
 import Home from './screens/Home'
 import CreateList from './screens/CreateList'
+import AddLink from './screens/AddLink'
 import List from './screens/List'
 import { colors } from './style'
 
@@ -30,6 +31,7 @@ export default function App(sources) {
   const pageSink$ = sources.router.routedComponent({
     '/home': Home,
     '/create': CreateList,
+    '/addlink': AddLink,
     '/list/:key': key => sources => List({ ...sources, key$: xs.of(key) }),
     '*': () => ({ DOM: xs.of('404'), router: xs.of('/home') })
   })(sources);
@@ -46,7 +48,9 @@ export default function App(sources) {
 
   return {
     DOM: layout$,
-    router: pageSink$.compose(getSink('router'))
+    router: pageSink$.compose(getSink('router')),
+    HYPER: pageSink$.compose(getSink('HYPER')),
+    LEVEL: pageSink$.compose(getSink('LEVEL'))
   }
 }
 

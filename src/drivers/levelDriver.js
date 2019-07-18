@@ -9,12 +9,19 @@ export default function createLevelDriver(name, opts) {
 
   return function levelSource(sink$) {
     const get$ = sink$.filter(({ type }) => type === 'get')
+    const query$ = sink$.filter(({ type }) => type === 'query')
     const put$ = sink$.filter(({ type }) => type === 'put')
     const del$ = sink$.filter(({ type }) => type === 'del')
 
     get$.subscribe({
-      next({ key }) {
-        read(key)
+      next({ name, key }) {
+        read(name, key)
+      }
+    })
+
+    query$.subscribe({
+      next({ name, options }) {
+        query(name, options)
       }
     })
 
@@ -41,17 +48,24 @@ export default function createLevelDriver(name, opts) {
     })
 
     return {
-      read(key) {
-        if (!reads[key]) {
-          reads[key] = xs.create()
+      read(name) {
+        if (!reads[name]) {
+          reads[name] = xs.create()
         }
-        return reads[key]
+        return reads[name]
+      },
+
+      query(name) {
+        if (!reads[name]) {
+          reads[name] = xs.create()
+        }
+        return reads[name]
       }
     }
   }
 
-  function read(key) {
-    if (reads[key]) {
+  function read(name, key) {
+    if (reads[name]) {
       const stream = xs.create({
         start(listener) {
           db.get(key, (err, data) => {
@@ -61,7 +75,28 @@ export default function createLevelDriver(name, opts) {
         },
         stop() {}
       })
-      reads[key]._n(stream)
+      reads[name]._n(stream)
+    }
+  }
+
+  function query(name, options) {
+    if (reads[name]) {
+      const stream = xs.create({
+        start(listener) {
+          let data = []
+          db.createReadStream(options)
+            .on('data', d => {
+              console.log(d)
+              data.push(d)
+            })
+            .on('error', listener.error)
+            .on('end', () => {
+              console.log('data', data)
+              listener.next(data)
+            })
+        },
+        stop() {}
+      })
     }
   }
 

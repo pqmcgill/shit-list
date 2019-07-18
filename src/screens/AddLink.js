@@ -8,11 +8,11 @@ import Input from '../components/Input'
 import Button from '../components/Button'
 
 function intent(domSrc, hyperSrc, levelSrc) {
-  const nameChange$ = domSrc
-    .select('name')
+  const linkChange$ = domSrc
+    .select('link')
     .events('change')
 
-  const submitName$ = domSrc
+  const submitLink$ = domSrc
     .select('submitBtn')
     .events('click')
 
@@ -22,30 +22,36 @@ function intent(domSrc, hyperSrc, levelSrc) {
     .map(({ key }) => key.toString('hex'))
 
   return {
-    nameChange$,
-    submitName$,
+    linkChange$,
+    submitLink$,
     archiveReady$
   }
 }
 
 function model(actions) {
-  const name$ = actions.nameChange$
+  const link$ = actions.linkChange$
     .map(e => e.target.value)
     .startWith('')
 
+  const key$ = link$
+    .map(link => link.match(/([0-9a-fA-F]{64})\/?$/))
+    .map(match => match ? match[1] : false)
+
   return xs.combine(
-    name$,
-  ).map(([ name, key ]) => ({
-    name,
+    link$,
+    key$
+  ).map(([ link, key ]) => ({
+    link,
+    key
   })).remember()
 }
 
 function view(state$) {
   return state$.map(state => (
     h(Fragment, [
-      h2('Enter a name for you new shit list'),
+      h2('Paste in a URL link or a hexadecimal key'),
       div([
-        h(Input, { sel: 'name', type: 'text', value: state.name }),
+        h(Input, { sel: 'link', type: 'text', value: state.link }),
         p([
           h(Button, { sel: 'submitBtn', type: 'submit' }, 'Submit')
         ])
@@ -55,28 +61,19 @@ function view(state$) {
 }
 
 function hyper(actions, state$) {
-  const createShitList$ = actions.submitName$
-    .map(() => ({
-      type: 'open',
-      name: 'newShitList'
-    }))
-
-  const writeName$ = actions.archiveReady$
+  const createShitList$ = actions.submitLink$
     .map(() => state$
-      .filter(state => !!state.name)
-      .map(state => state.name)
-      .take(1))
-    .flatten()
-    .map(name => ({
-      type: 'write',
-      name: 'newShitList',
-      path: '/name.txt',
-      data: name
-    }));
+      .filter(({ key }) => !!key)
+      .take(1)
+      .map(({ key }) => ({
+        type: 'open',
+        name: 'newShitList',
+        key
+      }))
+    ).flatten()
 
   return xs.merge(
-    createShitList$,
-    writeName$
+    createShitList$
   );
 }
 

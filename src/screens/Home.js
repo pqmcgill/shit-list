@@ -1,3 +1,4 @@
+import xs from 'xstream'
 import { h } from '@cycle/react'
 import { p, div } from '@cycle/react-dom'
 import styled from 'styled-components'
@@ -99,16 +100,11 @@ function view(state$) {
 function model(actions) {
   const list$ = actions.getPersistedList$$
     .map(persistedList$ => persistedList$
-      .map(list => list.toString().split(',')
-        .map(keyNameStr => {
-          const [name, key] = keyNameStr.split(':')
-          return { name, key }
-        })))
+      .debug('lists')
+    )
     .flatten()
-    .startWith([{
-      name: 'Ada',
-      key: 'abc123'
-    }])
+    .debug('data')
+    .startWith([])
 
   return list$.map(lists => ({ 
     lists
@@ -118,7 +114,14 @@ function model(actions) {
 function navigation(actions) {
   const navToCreate$ = actions.createBtnClick$
     .mapTo('/create')
-  return navToCreate$
+
+  const navToAddLink$ = actions.addLinkBtnClick$
+    .mapTo('/addlink')
+
+  return xs.merge(
+    navToCreate$,
+    navToAddLink$
+  )
 }
 
 
@@ -127,12 +130,26 @@ function intent(levelSrc, domSrc) {
     .select('createBtn')
     .events('click')
 
+  const addLinkBtnClick$ = domSrc
+    .select('addLinkBtn')
+    .events('click')
+
   const getPersistedList$$ = levelSrc.read('lists')
 
   return {
     createBtnClick$,
+    addLinkBtnClick$,
     getPersistedList$$
   }
+}
+
+// TODO: doesn't work. fix!
+function level() {
+  return xs.of({
+    name: 'lists',
+    type: 'query',
+    options: { gt: 'shitlist-', lt: 'shitlist-\xff' }
+  })
 }
 
 export default function Home(sources) {
@@ -143,9 +160,11 @@ export default function Home(sources) {
 
   const dom$ = view(model(actions))
   const nav$ = navigation(actions)
+  const level$ = level()
 
   return {
     DOM: dom$,
-    router: nav$
+    router: nav$,
+    LEVEL: level$
   }
 }

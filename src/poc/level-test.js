@@ -4,27 +4,27 @@ import { div, h1, ul, li } from '@cycle/react-dom'
 
 export function LevelTest(sources) {
   const readResponse$ = sources.LEVEL
-    .read('keys')
+    .read(['test', 'foo'])
     .map(req => req.replaceError(err => xs.of('not found')))
     .flatten()
     .map(v => v.toString())
 
   const readRequest$ = xs.of({
     type: 'get',
-    key: 'keys'
+    key: ['test', 'foo']
   })
 
   const put$ = xs.of({
     type: 'put',
-    key: 'keys',
+    key: ['test', 'foo'],
     value: ['abc123', '123abc'],
-    rerun: 'keys'
+    rerun: ['test', 'foo']
   }).compose(delay(5000))
 
   const del$ = xs.of({
     type: 'del',
-    key: 'keys',
-    rerun: 'keys'
+    key: ['test', 'foo'],
+    rerun: ['test', 'foo']
   }).compose(delay(10000))
 
   const dom$ = readResponse$

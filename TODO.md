@@ -9,7 +9,8 @@
  * ~~cyclejs <--> hyperdrive driver~~
  * domain modeling
  * my shit lists page
- * create shit list
+ * ~~create shit list~~
+ * ~~link to existing shit list~~
  * shit list page
  * data entry
  * data dump

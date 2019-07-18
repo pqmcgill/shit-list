@@ -13,7 +13,7 @@ const drivers = {
   DOM: makeDOMDriver(document.querySelector('#root')),
   HYPER: hyperDriver,
   HISTORY: makeHistoryDriver(),
-  LEVEL: makeLevelDriver('test-db', { prefix: 'shit-list:' })
+  LEVEL: makeLevelDriver('shit-list-db', { prefix: 'shit-list:' })
 }
 
 const Main = routerify(App, switchPath, {
