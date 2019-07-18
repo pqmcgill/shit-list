@@ -1,3 +1,9 @@
+export const emojis = {
+  poop: '💩',
+  greenCheck: '✅',
+  redX: '❌'
+}
+
 export const colors = {
   white: '#FFFFFF',
   black: '#070B14',

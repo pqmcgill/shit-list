@@ -7,13 +7,16 @@ import TopBar from './components/TopBar'
 import Home from './screens/Home'
 import CreateList from './screens/CreateList'
 import List from './screens/List'
+import { colors } from './style'
 
 const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
+  margin: 0 auto;
   max-width: 800px;
-	margin: 0 auto;
+  height: 100%;
 	font-family: 'Source Sans Pro','PT Sans',Calibri,sans-serif; 
+  color: ${ colors.blueDarker };
 `
 
 export default function App(sources) {

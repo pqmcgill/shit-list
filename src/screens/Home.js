@@ -1,12 +1,8 @@
 import xs from 'xstream'
 import { h } from '@cycle/react'
-import { div, h1, ul, li } from '@cycle/react-dom'
+import { h3, div } from '@cycle/react-dom'
 import styled from 'styled-components'
 import { colors } from '../style'
-
-const Header = styled.h3`
-  color: ${colors.neutral}
-`
 
 const Lists = styled.ul`
   padding: 0;
@@ -20,39 +16,86 @@ const List = styled.li`
   padding: 1rem;
 ` 
 
-export default function Home(sources) {
-  const readLists$$ = sources.LEVEL.read('lists')
+const CreateBtn = styled.button`
+  border: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: solid 2px ${colors.blue};
+  display: flex;
+  font-size: 1rem;
+  justify-content: center;
+  align-items: center;
+`
 
-  const list$ = readLists$$
-    .map(req$ => req$
-      .map(listData => listData
-        .toString()
-        .split(',')
-        .map(listKeyName => {
-          const [name, key] = listKeyName.split(':')
+const NoListMsg = styled.div`
+  display: flex;
+  justify-content: center;
+`
+
+function view(state$) {
+  return state$.map(({ lists, hasLists }) => (
+  div([
+    h(Lists, [
+      hasLists
+        ? lists.map(({ name, key }) => 
+            h(List, `${name}: ${key}`)) 
+        : h(NoListMsg,'You don\'t have any shit lists. Why don\'t you create one?'),
+      
+      h(CreateBtn, { sel: 'createBtn' }, `+`)
+    ])
+  ])
+  ))
+}
+
+function model(actions) {
+  const list$ = actions.getPersistedList$$
+    .map(persistedList$ => persistedList$
+      .map(list => list.toString().split(',')
+        .map(keyNameStr => {
+          const [name, key] = keyNameStr.split(':')
           return { name, key }
-        })
-      )
-      .replaceError(err => xs.of([]))
-    )
+        })))
     .flatten()
     .startWith([])
 
-  const dom$ = list$.map(lists => (
-    div([
-      h(Header, 'My lists'),
-      h(Lists, [
-        lists.length  
-          ? lists.map(({ name, key }) => (
-            h(List, `${name}: ${key}`)
-          ))
-          : 'You don\'t have any lists. Why don\'t you create one?'
-      ])
-    ])
-  ))
+  return list$.map(lists => ({ 
+    lists,
+    hasLists: !!lists.length
+  }))
+}
+
+function navigation(actions) {
+  const navToCreate$ = actions.createBtnClick$
+    .mapTo('/create')
+  return navToCreate$
+}
+
+
+function intent(levelSrc, domSrc) {
+  const createBtnClick$ = domSrc
+    .select('createBtn')
+    .events('click')
+
+  const getPersistedList$$ = levelSrc.read('lists')
 
   return {
-    DOM: dom$
+    createBtnClick$,
+    getPersistedList$$
   }
 }
 
+export default function Home(sources) {
+  const actions = intent(
+    sources.LEVEL,
+    sources.DOM
+  )
+
+  const dom$ = view(model(actions))
+  const nav$ = navigation(actions)
+
+  return {
+    DOM: dom$,
+    router: nav$
+  }
+}

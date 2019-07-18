@@ -1,7 +1,7 @@
 import xs from 'xstream'
 import { h } from '@cycle/react'
 import styled from 'styled-components'
-import { colors } from '../style'
+import { colors, emojis } from '../style'
 
 const Header = styled.nav`
   display: flex;
@@ -13,13 +13,12 @@ const Header = styled.nav`
   padding: 0 1rem;
   border: solid ${colors.pink} 2px;
   border-radius: 1rem;
-  color: ${colors.neutral};
 `
 
 export default function TopBar(sources) {
   const dom$ = xs.of(
     h(Header, [
-      '💩 Shit List'
+      `${emojis.poop} ShitList`
     ])
   )
   return {

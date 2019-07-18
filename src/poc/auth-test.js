@@ -1,6 +1,7 @@
 import xs from 'xstream'
 import delay from 'xstream/extra/delay'
 import { div, h1 } from '@cycle/react-dom'
+import { emojis } from '../style'
 
 export default function AuthTest(sources) {
   // DAT STUFF ===========================
@@ -48,10 +49,10 @@ export default function AuthTest(sources) {
   const dom$ = state$.map(({ ownerAuth, visitorAuth }) => (
     div([
       h1([
-        `Owner Authorized: ${ ownerAuth ? '✅' : '❌' }`
+        `Owner Authorized: ${ ownerAuth ? emojis.greenCheck : emojis.redX }`
       ]),
       h1([
-        `Visitor Authorized: ${ visitorAuth ? '✅' : '❌' }`
+        `Visitor Authorized: ${ visitorAuth ? emojis.greenCheck : emojis.redX }`
       ])
     ])
   ))
