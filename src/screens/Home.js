@@ -1,8 +1,19 @@
-import xs from 'xstream'
 import { h } from '@cycle/react'
-import { h3, div } from '@cycle/react-dom'
+import { p, div } from '@cycle/react-dom'
 import styled from 'styled-components'
 import { colors } from '../style'
+import ShadowBox from '../components/ShadowBox'
+import Button from '../components/Button'
+
+const WelcomeHeader = styled.h4`
+  margin: 0.5rem 1rem 1rem 1rem;
+  font-size: 1.3rem;
+  text-align: center;
+`
+
+const Bold = styled.b`
+  color: ${colors.lightBlue};
+`
 
 const Lists = styled.ul`
   padding: 0;
@@ -10,42 +21,79 @@ const Lists = styled.ul`
 
 const List = styled.li`
   list-style-type: none;
-  border: solid 2px ${colors.pink};
-  border-radius: 1rem;
-  margin: 1rem 0;
-  padding: 1rem;
-` 
-
-const CreateBtn = styled.button`
-  border: none;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  border: solid 2px ${colors.blue};
+  border: solid 2px ${colors.neutral20};
+  border-radius: 0.5rem;
+  margin: 0 0 0.5rem 0;
+  padding: 0 0.5rem;
+  min-height: 3rem;
+  position: relative;
+  cursor: pointer;
+  font-size: 1.2rem;
   display: flex;
-  font-size: 1rem;
-  justify-content: center;
   align-items: center;
-`
+  color: ${colors.darkRed};
+` 
 
 const NoListMsg = styled.div`
   display: flex;
   justify-content: center;
 `
 
+const BtnWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  margin-top: 1rem;
+`
+
+const CreateBtn = styled(Button)`
+  height: 4rem;
+`
+
+const AddLinkBtn = styled(Button)`
+  margin-top: 1rem;
+  height: 2.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${colors.lightBlue};
+  background-color: ${colors.white};
+  border-color: ${colors.lightBlue};
+`
+
 function view(state$) {
-  return state$.map(({ lists, hasLists }) => (
-  div([
-    h(Lists, [
-      hasLists
-        ? lists.map(({ name, key }) => 
-            h(List, `${name}: ${key}`)) 
-        : h(NoListMsg,'You don\'t have any shit lists. Why don\'t you create one?'),
-      
-      h(CreateBtn, { sel: 'createBtn' }, `+`)
+  return state$.map(({ lists }) => (
+    div([
+      h(ShadowBox, [
+        h(WelcomeHeader, 'Welcome to ShitList!'),
+        p(['Shit lists are useful for collecting data on your newborn\'s ',
+          h(Bold, 'eating,'), 
+          ' ',
+          h(Bold, 'sleeping,'), 
+          ' and ',
+          h(Bold, 'pooping'),
+          ' habits.'
+        ]),
+        p(['Easily share your lists with your friends and family!']),
+      ]),
+      renderLists(lists)
     ])
-  ])
   ))
+
+  function renderLists(lists) {
+    const hasLists = !!lists.length
+    return h(Lists, [
+      hasLists
+      ? lists.map(({ name, key }) => 
+        h(List, `${name}`)) 
+      : h(NoListMsg,'You don\'t have any shit lists. Why don\'t you create one?'),
+
+      h(BtnWrapper, [
+        h(CreateBtn, { sel: 'createBtn' }, 'Create a new list'),
+        h(AddLinkBtn, { sel: 'addLinkBtn' }, 'Link an existing list')
+      ])
+    ])
+  }
 }
 
 function model(actions) {
@@ -57,11 +105,13 @@ function model(actions) {
           return { name, key }
         })))
     .flatten()
-    .startWith([])
+    .startWith([{
+      name: 'Ada',
+      key: 'abc123'
+    }])
 
   return list$.map(lists => ({ 
-    lists,
-    hasLists: !!lists.length
+    lists
   }))
 }
 

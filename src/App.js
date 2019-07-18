@@ -1,6 +1,5 @@
 import xs from 'xstream'
 import { h } from '@cycle/react'
-import { div } from '@cycle/react-dom'
 import styled from 'styled-components'
 import { getSink } from './util/getSink'
 import TopBar from './components/TopBar'
@@ -16,7 +15,13 @@ const Wrapper = styled.div`
   max-width: 800px;
   height: 100%;
 	font-family: 'Source Sans Pro','PT Sans',Calibri,sans-serif; 
-  color: ${ colors.blueDarker };
+  color: ${colors.darkBlue};
+  background-color: ${colors.white};
+  height: 100vh;
+`
+
+const Content = styled.section`
+  margin: 1rem 1rem 2rem 1rem;
 `
 
 export default function App(sources) {
@@ -35,7 +40,7 @@ export default function App(sources) {
   ).map(([topBar, page]) => {
     return h(Wrapper, [
       topBar,
-      page
+      h(Content, [page])
     ])
   })
 

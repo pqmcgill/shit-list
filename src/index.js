@@ -6,6 +6,7 @@ import hyperDriver from './drivers/hyperDriver'
 import makeLevelDriver from './drivers/levelDriver'
 import { routerify } from 'cyclic-router'
 import switchPath from 'switch-path'
+import './index.css'
 import App from './App'
 
 const drivers = {
