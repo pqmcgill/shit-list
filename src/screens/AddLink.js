@@ -75,21 +75,6 @@ function hyper(actions, state$) {
   );
 }
 
-function level(actions, state$) {
-  return actions.archiveReady$
-    .map(key => state$
-      .take(1)
-      .map(({ name }) => ({ name, key }))
-    )
-    .flatten()
-    .debug('here')
-    .map(({ name, key }) => ({
-      type: 'put',
-      key: `shitlist-${key}`,
-      value: name
-    }))
-}
-
 function navigation(actions) {
   return actions.archiveReady$ 
     .map(key => key)
@@ -100,14 +85,12 @@ function navigation(actions) {
 export default function CreateList(sources) {
   const actions = intent(sources.DOM, sources.HYPER)
   const state$ = model(actions)
-  const level$ = level(actions, state$)
   const nav$ = navigation(actions)
   const hyper$ = hyper(actions, state$)
   const dom$ = view(state$)
   return {
     DOM: dom$,
     HYPER: hyper$,
-    LEVEL: level$,
     router: nav$
   }
 }

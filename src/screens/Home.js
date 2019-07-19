@@ -81,12 +81,13 @@ function view(state$) {
     ])
   ))
 
+  // TODO: refactor to use cycle-collection
   function renderLists(lists) {
     const hasLists = !!lists.length
     return h(Lists, [
       hasLists
       ? lists.map(({ name, key }) => 
-        h(List, `${name}`)) 
+        h(List, { key }, `${name}`)) 
       : h(NoListMsg,'You don\'t have any shit lists. Why don\'t you create one?'),
 
       h(BtnWrapper, [

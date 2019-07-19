@@ -2,12 +2,10 @@ import xs from 'xstream'
 import { h } from '@cycle/react'
 import { Fragment } from 'react'
 import { h2, div, p } from '@cycle/react-dom'
-import styled from 'styled-components'
-import { colors } from '../style'
 import Input from '../components/Input'
 import Button from '../components/Button'
 
-function intent(domSrc, hyperSrc, levelSrc) {
+function intent(domSrc, hyperSrc) {
   const nameChange$ = domSrc
     .select('name')
     .events('change')
@@ -35,13 +33,9 @@ function intent(domSrc, hyperSrc, levelSrc) {
 }
 
 function model(actions) {
-  const name$ = actions.nameChange$
-
-  return xs.combine(
-    name$,
-  ).map(([ name, key ]) => ({
-    name,
-  })).remember()
+  return actions.nameChange$
+    .map(name => ({ name }))
+    .remember()
 }
 
 function view(state$) {
@@ -58,7 +52,7 @@ function view(state$) {
   )
 }
 
-function hyper(actions, state$) {
+function hyper(actions) {
   const createShitList$ = actions.submitName$
     .map(() => ({
       type: 'open',
@@ -81,30 +75,21 @@ function hyper(actions, state$) {
   );
 }
 
-function level(actions, state$) {
+function navigation(actions) {
   return actions.archiveReady$
-    .map(key => actions.submitName$
-      .map(name => ({ name, key }))
-    )
-    .flatten()
-    .map(({ name, key }) => ({
-      type: 'put',
-      key: `shitlist-${key}`,
-      value: name
-    }))
+    .take(1)
+    .map(key => `/list/${key}`)
 }
 
 export default function CreateList(sources) {
-  const actions = intent(sources.DOM, sources.HYPER, sources.LEVEL)
+  const actions = intent(sources.DOM, sources.HYPER)
   const state$ = model(actions)
-  const level$ = level(actions, state$)
-  const nav$ = level$.map(() => actions.archiveReady$.map(key => key).take(1)).flatten().map(key => `/list/${key}`)
-  const hyper$ = hyper(actions, state$)
+  const nav$ = navigation(actions)
+  const hyper$ = hyper(actions)
   const dom$ = view(state$)
   return {
     DOM: dom$,
     HYPER: hyper$,
-    LEVEL: level$,
     router: nav$
   }
 }

@@ -86,12 +86,10 @@ export default function createLevelDriver(name, opts) {
           let data = []
           db.createReadStream(options)
             .on('data', d => {
-              console.log(d)
               data.push(d)
             })
             .on('error', listener.error)
             .on('end', () => {
-              console.log('data', data)
               listener.next(data)
             })
         },

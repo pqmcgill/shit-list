@@ -8,7 +8,6 @@ export default function List(sources) {
     .select('shitlist')
     .archive$
     .take(1)
-    .subscribe({})
 
   const openArchive$ = key$.map(key => ({
     type: 'open',
@@ -27,6 +26,18 @@ export default function List(sources) {
     .read('/name.txt')
     .map(data => data.toString())
 
+  const level$ = listName$
+    .take(1)
+    .map(name => archiveReady$.map(archive => ({ name, key: archive.key.toString('hex') })))
+    .flatten()
+    .debug('here')
+    .map(({ name, key }) => ({
+      type: 'put',
+      key: `shitlist-${key}`,
+      value: name
+    }))
+    .debug('writing list')
+
   return {
     DOM: xs.combine(key$, listName$)
       .map(([key, name]) => (div([
@@ -36,6 +47,7 @@ export default function List(sources) {
     HYPER: xs.merge(
       openArchive$,
       readListName$
-    )
+    ),
+    LEVEL: level$
   }
 }
