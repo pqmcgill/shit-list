@@ -97,6 +97,7 @@ export default function createLevelDriver(name, opts) {
         },
         stop() {}
       })
+      return reads[name]._n(stream)
     }
   }
 

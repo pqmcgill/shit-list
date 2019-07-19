@@ -11,10 +11,16 @@ function intent(domSrc, hyperSrc, levelSrc) {
   const nameChange$ = domSrc
     .select('name')
     .events('change')
+    .map(e => e.target.value)
+    .startWith('')
+    .remember()
 
   const submitName$ = domSrc
     .select('submitBtn')
     .events('click')
+    .map(() => nameChange$.take(1))
+    .flatten()
+    .remember()
 
   const archiveReady$ = hyperSrc
     .select('newShitList')
@@ -30,8 +36,6 @@ function intent(domSrc, hyperSrc, levelSrc) {
 
 function model(actions) {
   const name$ = actions.nameChange$
-    .map(e => e.target.value)
-    .startWith('')
 
   return xs.combine(
     name$,
@@ -62,10 +66,7 @@ function hyper(actions, state$) {
     }))
 
   const writeName$ = actions.archiveReady$
-    .map(() => state$
-      .filter(state => !!state.name)
-      .map(state => state.name)
-      .take(1))
+    .map(() => actions.submitName$)
     .flatten()
     .map(name => ({
       type: 'write',
@@ -82,9 +83,8 @@ function hyper(actions, state$) {
 
 function level(actions, state$) {
   return actions.archiveReady$
-    .map(key => state$
-      .take(1)
-      .map(({ name }) => ({ name, key }))
+    .map(key => actions.submitName$
+      .map(name => ({ name, key }))
     )
     .flatten()
     .map(({ name, key }) => ({

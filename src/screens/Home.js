@@ -99,11 +99,9 @@ function view(state$) {
 
 function model(actions) {
   const list$ = actions.getPersistedList$$
-    .map(persistedList$ => persistedList$
-      .debug('lists')
-    )
+    .map(persistedList$ => persistedList$)
     .flatten()
-    .debug('data')
+    .map(lists => lists.map(({ key, value }) => ({ key: key.toString(), name: value.toString() })))
     .startWith([])
 
   return list$.map(lists => ({ 

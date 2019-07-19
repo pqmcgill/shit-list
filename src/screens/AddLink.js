@@ -82,6 +82,7 @@ function level(actions, state$) {
       .map(({ name }) => ({ name, key }))
     )
     .flatten()
+    .debug('here')
     .map(({ name, key }) => ({
       type: 'put',
       key: `shitlist-${key}`,

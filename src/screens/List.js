@@ -8,7 +8,6 @@ export default function List(sources) {
     .select('shitlist')
     .archive$
     .take(1)
-    .debug('archive')
     .subscribe({})
 
   const openArchive$ = key$.map(key => ({
