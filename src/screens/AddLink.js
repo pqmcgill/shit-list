@@ -2,12 +2,10 @@ import xs from 'xstream'
 import { h } from '@cycle/react'
 import { Fragment } from 'react'
 import { h2, div, p } from '@cycle/react-dom'
-import styled from 'styled-components'
-import { colors } from '../style'
 import Input from '../components/Input'
 import Button from '../components/Button'
 
-function intent(domSrc, hyperSrc, levelSrc) {
+function intent(domSrc, hyperSrc) {
   const linkChange$ = domSrc
     .select('link')
     .events('change')
@@ -91,11 +89,18 @@ function level(actions, state$) {
     }))
 }
 
+function navigation(actions) {
+  return actions.archiveReady$ 
+    .map(key => key)
+    .take(1)
+    .map(key => `/list/${key}`)
+}
+
 export default function CreateList(sources) {
-  const actions = intent(sources.DOM, sources.HYPER, sources.LEVEL)
+  const actions = intent(sources.DOM, sources.HYPER)
   const state$ = model(actions)
   const level$ = level(actions, state$)
-  const nav$ = level$.map(() => actions.archiveReady$.map(key => key).take(1)).flatten().map(key => `/list/${key}`)
+  const nav$ = navigation(actions)
   const hyper$ = hyper(actions, state$)
   const dom$ = view(state$)
   return {
