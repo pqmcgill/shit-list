@@ -13,7 +13,7 @@ const WelcomeHeader = styled.h4`
 `
 
 const Bold = styled.b`
-  color: ${colors.lightBlue};
+  color: ${colors.darkBlue};
 `
 
 const Lists = styled.ul`
@@ -22,7 +22,7 @@ const Lists = styled.ul`
 
 const List = styled.li`
   list-style-type: none;
-  border: solid 2px ${colors.neutral20};
+  border: solid 2px ${colors.lightBlue};
   border-radius: 0.5rem;
   margin: 0 0 0.5rem 0;
   padding: 0 0.5rem;
@@ -32,7 +32,7 @@ const List = styled.li`
   font-size: 1.2rem;
   display: flex;
   align-items: center;
-  color: ${colors.darkRed};
+  color: ${colors.darkBlue};
 ` 
 
 const NoListMsg = styled.div`
@@ -122,7 +122,6 @@ function navigation(actions) {
     navToAddLink$
   )
 }
-
 
 function intent(levelSrc, domSrc) {
   const createBtnClick$ = domSrc

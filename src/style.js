@@ -21,7 +21,7 @@ export const colors = {
   neutral04: '#F6F7F8',
   lightRed: '#D88373',
   darkRed: '#8E3B46',
-  lightBlue: '#99D5C9',
+  lightBlue: '#6EC1B1',
   darkBlue: '#477890'
 }
 
