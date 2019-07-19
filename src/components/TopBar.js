@@ -34,9 +34,11 @@ export default function TopBar(sources) {
   const logoClick$ = sources.DOM
     .select('logo')
     .events('click')
+    .debug('click')
 
   const navToHome$ = logoClick$
     .mapTo('/home')
+    .debug('nav')
 
   const dom$ = xs.of(
     h(Header, [

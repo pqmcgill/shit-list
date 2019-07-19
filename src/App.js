@@ -46,9 +46,14 @@ export default function App(sources) {
     ])
   })
 
+  const nav$ = xs.merge(
+    pageSink$.compose(getSink('router')),
+    topBarSinks.router
+  )
+
   return {
     DOM: layout$,
-    router: pageSink$.compose(getSink('router')),
+    router: nav$,
     HYPER: pageSink$.compose(getSink('HYPER')),
     LEVEL: pageSink$.compose(getSink('LEVEL'))
   }
