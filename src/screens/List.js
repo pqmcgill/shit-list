@@ -24,7 +24,10 @@ function model(actions) {
   return xs.combine(
     actions.readKey$,
     actions.readListName$
-  ).map(([key, name]) => ({ key, name }))
+  ).map(([key, name]) => ({ 
+    archiveKey: key, 
+    archiveName: name 
+  })).debug('state')
 }
 
 function view(state$) {
@@ -39,7 +42,7 @@ function view(state$) {
 }
 
 function level(actions) {
-  return actions.listName$
+  return actions.readListName$
     .take(1)
     .map(name => actions.archiveReady$.map(archive => ({ name, key: archive.key.toString('hex') })))
     .flatten()
@@ -70,7 +73,7 @@ function hyper(actions) {
 }
 
 export default function List(sources) {
-  const actions = intent(sources.HYPER);
+  const actions = intent(sources.HYPER, sources.key$);
   const level$ = level(actions)
   const hyper$ = hyper(actions)
   const dom$ = view(model(actions))

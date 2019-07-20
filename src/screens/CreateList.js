@@ -23,6 +23,8 @@ function intent(domSrc, hyperSrc) {
   const archiveReady$ = hyperSrc
     .select('newShitList')
     .archive$
+    .map(archive => nameChange$.take(1).mapTo(archive))
+    .flatten()
     .map(({ key }) => key.toString('hex'))
 
   return {
@@ -60,7 +62,7 @@ function hyper(actions) {
     }))
 
   const writeName$ = actions.archiveReady$
-    .map(() => actions.submitName$)
+    .map(() => actions.nameChange$.take(1))
     .flatten()
     .map(name => ({
       type: 'write',
