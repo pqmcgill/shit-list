@@ -9,14 +9,22 @@ function intent(domSrc, hyperSrc) {
   const linkChange$ = domSrc
     .select('link')
     .events('change')
+    .map(e => e.target.value)
+    .startWith('')
+    .remember()
 
   const submitLink$ = domSrc
     .select('submitBtn')
     .events('click')
+    .map(() => linkChange$.take(1))
+    .flatten()
+    .remember()
 
   const archiveReady$ = hyperSrc
     .select('newShitList')
     .archive$
+    .map(archive => submitLink$.take(1).mapTo(archive))
+    .flatten()
     .map(({ key }) => key.toString('hex'))
 
   return {
@@ -28,8 +36,6 @@ function intent(domSrc, hyperSrc) {
 
 function model(actions) {
   const link$ = actions.linkChange$
-    .map(e => e.target.value)
-    .startWith('')
 
   const key$ = link$
     .map(link => link.match(/([0-9a-fA-F]{64})\/?$/))

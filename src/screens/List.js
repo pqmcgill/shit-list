@@ -27,7 +27,7 @@ function model(actions) {
   ).map(([key, name]) => ({ 
     archiveKey: key, 
     archiveName: name 
-  })).debug('state')
+  }))
 }
 
 function view(state$) {
