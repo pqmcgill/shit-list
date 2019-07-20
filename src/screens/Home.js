@@ -1,6 +1,7 @@
 import xs from 'xstream'
 import { h } from '@cycle/react'
-import { p, div } from '@cycle/react-dom'
+import { p, div, h3 } from '@cycle/react-dom'
+import { makeCollection } from '@cycle/state'
 import styled from 'styled-components'
 import { colors } from '../style'
 import ShadowBox from '../components/ShadowBox'
@@ -72,52 +73,56 @@ const AddLinkBtn = styled(Button)`
   border-color: ${colors.lightBlue};
 `
 
-function view(state$) {
-  return state$.map(({ lists }) => (
-    div([
-      h(ShadowBox, [
-        h(WelcomeHeader, 'Welcome to ShitList!'),
-        p(['Shit lists are useful for collecting data on your newborn\'s ',
-          h(Bold, 'eating,'), 
-          ' ',
-          h(Bold, 'sleeping,'), 
-          ' and ',
-          h(Bold, 'pooping'),
-          ' habits.'
+function view(state$, listDom$) {
+  return xs.combine(state$, listDom$)
+    .map(([shitLists, listDom]) => (
+      div([
+        h(ShadowBox, [
+          h(WelcomeHeader, 'Welcome to ShitList!'),
+          p(['Shit lists are useful for collecting data on your newborn\'s ',
+            h(Bold, 'eating,'), 
+            ' ',
+            h(Bold, 'sleeping,'), 
+            ' and ',
+            h(Bold, 'pooping'),
+            ' habits.'
+          ]),
+          p(['Easily share your lists with your friends and family!']),
         ]),
-        p(['Easily share your lists with your friends and family!']),
-      ]),
-      renderLists(lists)
-    ])
-  ))
 
-  // TODO: refactor to use cycle-collection
-  function renderLists(lists) {
-    const hasLists = !!lists.length
-    return h(Lists, [
-      hasLists
-      ? lists.map(({ name, key }) => 
-        h(List, { key }, `${name}`)) 
-      : h(NoListMsg,'You don\'t have any shit lists. Why don\'t you create one?'),
+        shitLists.length 
+          ? listDom
+          : h(NoListMsg,'You don\'t have any shit lists. Why don\'t you create one?'),
 
-      h(BtnWrapper, [
-        h(CreateBtn, { sel: 'createBtn' }, 'Create a new list'),
-        h(AddLinkBtn, { sel: 'addLinkBtn' }, 'Link an existing list')
+        h(BtnWrapper, [
+          h(CreateBtn, { sel: 'createBtn' }, 'Create a new list'),
+          h(AddLinkBtn, { sel: 'addLinkBtn' }, 'Link an existing list')
+        ])
       ])
-    ])
-  }
+    ))
 }
 
 function model(actions) {
-  const list$ = actions.getPersistedList$$
-    .map(persistedList$ => persistedList$)
-    .flatten()
-    .map(lists => lists.map(({ key, value }) => ({ key: key.toString(), name: value.toString() })))
-    .startWith([])
+  const defaultReducer$ = xs.of(
+    function defaultReducer(prev) {
+      return []
+    }
+  )
 
-  return list$.map(lists => ({ 
-    lists
-  }))
+  const listsReducer$ = actions.getShitLists$$
+    .flatten()
+    .map(shitLists => function listReducer(prev) {
+      return shitLists
+        .map(({ key, value }) => ({
+          key: key.toString(),
+          name: value.toString()
+        }))
+    })
+
+  return xs.merge(
+    defaultReducer$,
+    listsReducer$
+  )
 }
 
 function navigation(actions) {
@@ -142,12 +147,12 @@ function intent(levelSrc, domSrc) {
     .select('addLinkBtn')
     .events('click')
 
-  const getPersistedList$$ = levelSrc.read('lists')
+  const getShitLists$$ = levelSrc.read('lists')
 
   return {
     createBtnClick$,
     addLinkBtnClick$,
-    getPersistedList$$
+    getShitLists$$
   }
 }
 
@@ -160,19 +165,72 @@ function level() {
   })
 }
 
+function ShitListItem(sources) {
+  const dom$ = sources.state.stream
+    .map(({ name, key }) => 
+      h(List, { key, sel: 'li' }, `${name}`)
+    ) 
+
+  const click$ = sources.DOM.select('li')
+    .events('click')
+
+  const nav$ = click$.map(() => sources.state.stream.take(1))
+    .flatten()
+    .map(({ key }) => `/list/${key.split('-')[1]}`)
+
+  return {
+    DOM: dom$,
+    router: nav$
+  }
+}
+
 export default function Home(sources) {
+  const List = makeCollection({
+    item: ShitListItem,
+    itemKey: (state, index) => String(index),
+    itemScope: key => key,
+    collectSinks: instances => {
+      return {
+        DOM: instances.pickCombine('DOM').map(listDom => div([
+          h3('Your Lists'),
+          listDom
+        ])),
+        state: instances.pickMerge('state'),
+        router: instances.pickMerge('router')
+      }
+    }
+  })
+
+  const listSinks = List(sources)
+
   const actions = intent(
     sources.LEVEL,
     sources.DOM
   )
 
-  const dom$ = view(model(actions))
-  const nav$ = navigation(actions)
+  const homeReducer$ = model(actions)
+  const homeNav$ = navigation(actions)
   const level$ = level()
+
+  const dom$ = view(
+    sources.state.stream, 
+    listSinks.DOM
+  )
+
+  const reducer$ = xs.merge(
+    homeReducer$, 
+    listSinks.state
+  )
+
+  const nav$ = xs.merge(
+    homeNav$, 
+    listSinks.router
+  )
 
   return {
     DOM: dom$,
     router: nav$,
-    LEVEL: level$
+    LEVEL: level$,
+    state: reducer$
   }
 }

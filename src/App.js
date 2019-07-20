@@ -55,7 +55,8 @@ export default function App(sources) {
     DOM: layout$,
     router: nav$,
     HYPER: pageSink$.compose(getSink('HYPER')),
-    LEVEL: pageSink$.compose(getSink('LEVEL'))
+    LEVEL: pageSink$.compose(getSink('LEVEL')),
+    state: pageSink$.compose(getSink('state'))
   }
 }
 

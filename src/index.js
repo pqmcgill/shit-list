@@ -2,9 +2,10 @@ import * as serviceWorker from './serviceWorker'
 import { run } from '@cycle/run'
 import { makeDOMDriver } from '@cycle/react-dom'
 import { makeHistoryDriver } from '@cycle/history'
+import { routerify } from 'cyclic-router'
+import { withState } from '@cycle/state'
 import hyperDriver from './drivers/hyperDriver'
 import makeLevelDriver from './drivers/levelDriver'
-import { routerify } from 'cyclic-router'
 import switchPath from 'switch-path'
 import './index.css'
 import App from './App'
@@ -16,9 +17,9 @@ const drivers = {
   LEVEL: makeLevelDriver('shit-list-db', { prefix: 'shit-list:' })
 }
 
-const Main = routerify(App, switchPath, {
+const Main = withState(routerify(App, switchPath, {
   historyName: 'HISTORY'
-})
+}))
 
 run(Main, drivers)
 
