@@ -33,6 +33,16 @@ const List = styled.li`
   display: flex;
   align-items: center;
   color: ${colors.darkBlue};
+  transform: translateZ(0);
+  transition: transform .25s ease-out;
+
+  &:active {
+    transform: scale(0.9)
+  }
+
+  &:hover {
+    transform: scale(1.03);
+  }
 ` 
 
 const NoListMsg = styled.div`
