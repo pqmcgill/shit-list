@@ -122,9 +122,7 @@ function createReadStream(path, archive) {
     start(listener) {
       archive.ready(() => {
         readFile()
-        archive.db.watch(path, function() {
-          readFile()
-        })
+        archive.db.watch(path, readFile)
       })
 
       function readFile() {

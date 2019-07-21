@@ -1,6 +1,21 @@
 import xs from 'xstream'
+import { h } from '@cycle/react'
 import { div, h2, p } from '@cycle/react-dom'
+import styled, { css } from 'styled-components'
+import ShadowBox from '../components/ShadowBox'
+import { colors } from '../style'
 
+const AuthText = styled.span`
+  font-weight: 700;
+  ${props => props.ok 
+    ? css`
+      color: ${colors.lightBlue};
+    `
+    : css`
+      color: ${colors.darkRed};
+    `
+  }
+`
 function intent(hyperSrc, keySrc) {
   const readKey$ = keySrc
 
@@ -35,10 +50,13 @@ function view(state$) {
     return (
       div([
         h2(archiveName),
-        p(`key: ${archiveKey}`)
+        h(ShadowBox, [
+          h(AuthText, 'Not Authorized'),
+          ' (Expand to add a writer)'
+        ])
       ])
     )
-  })
+  }).startWith('loading...')
 }
 
 function level(actions) {
@@ -60,7 +78,7 @@ function hyper(actions) {
     key
   }));
 
-  const readListName$ = actions.readKey$.mapTo({
+  const readListName$ = actions.archiveReady$.mapTo({
     type: 'read',
     name: 'shitlist',
     path: '/name.txt',
