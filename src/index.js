@@ -6,6 +6,7 @@ import { routerify } from 'cyclic-router'
 import { withState } from '@cycle/state'
 import hyperDriver from './drivers/hyperDriver'
 import makeLevelDriver from './drivers/levelDriver'
+import clipboardDriver from './drivers/clipboardDriver'
 import switchPath from 'switch-path'
 import './index.css'
 import App from './App'
@@ -14,7 +15,8 @@ const drivers = {
   DOM: makeDOMDriver(document.querySelector('#root')),
   HYPER: hyperDriver,
   HISTORY: makeHistoryDriver(),
-  LEVEL: makeLevelDriver('shit-list-db', { prefix: 'shit-list:' })
+  LEVEL: makeLevelDriver('shit-list-db', { prefix: 'shit-list:' }),
+  CLIP: clipboardDriver
 }
 
 const Main = withState(routerify(App, switchPath, {

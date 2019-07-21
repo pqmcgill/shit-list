@@ -58,14 +58,24 @@ function intent(keySrc, hyperSrc, domSrc) {
     .select('shitlist')
     .archive$
 
+  const authorized$ = hyperSrc
+    .select('shitlist')
+    .authorized$
+
   const expandCollapse$ = domSrc
     .select('expand')
+    .events('click')
+
+  const copyToClip$ = domSrc
+    .select('clip')
     .events('click')
     
   return {
     key$,
     archiveReady$,
-    expandCollapse$
+    authorized$,
+    expandCollapse$,
+    copyToClip$
   }
 }
 
@@ -73,7 +83,7 @@ function model(actions) {
   const defaultReducer$ = xs.of(function defaultReducer$(prev) {
     return {
       ...prev,
-      auth: true,
+      auth: false,
       localKey: undefined,
       expanded: false
     }
@@ -84,6 +94,14 @@ function model(actions) {
       return {
         ...prev,
         localKey: archive.db.local.key.toString('hex')
+      }
+    })
+
+  const authorizedReducer$ = actions.authorized$
+    .map(auth => function authorizedReducer(prev) {
+      return {
+        ...prev,
+        auth
       }
     })
 
@@ -98,6 +116,7 @@ function model(actions) {
   return xs.merge(
     defaultReducer$,
     localKeyReducer$,
+    authorizedReducer$,
     expandCollapseReducer$
   )
 }
@@ -134,7 +153,7 @@ function view(state$) {
         h(LocalKeySection, [
           'Your local 🔑 is:',
           h(Key, localKey),
-          h(Button, 'Copy 🔑 to Clipboard')
+          h(Button, { sel: 'clip' }, 'Copy 🔑 to Clipboard')
         ])
       ]
   }
@@ -148,15 +167,24 @@ function hyper(actions) {
   }))
 }
 
+function clip(actions) {
+  return actions.copyToClip$
+    .map(() => actions.archiveReady$.take(1))
+    .flatten()
+    .map(archive => archive.db.local.key.toString('hex'))
+}
+
 export default function AuthStatus(sources) {
   const actions = intent(sources.key$, sources.HYPER, sources.DOM)
   const reducer$ = model(actions)
   const state$ = sources.state.stream
   const dom$ = view(state$)
   const hyper$ = hyper(actions)
+  const clip$ = clip(actions)
   return {
     DOM: dom$,
     state: reducer$,
-    HYPER: hyper$
+    HYPER: hyper$,
+    CLIP: clip$
   }
 }

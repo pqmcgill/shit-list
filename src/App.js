@@ -56,7 +56,8 @@ export default function App(sources) {
     router: nav$,
     HYPER: pageSink$.compose(getSink('HYPER')),
     LEVEL: pageSink$.compose(getSink('LEVEL')),
-    state: pageSink$.compose(getSink('state'))
+    state: pageSink$.compose(getSink('state')),
+    CLIP: pageSink$.compose(getSink('CLIP'))
   }
 }
 

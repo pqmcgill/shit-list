@@ -79,6 +79,7 @@ export default function List(sources) {
   const authView$ = authSinks.DOM
   const authReducer$ = authSinks.state
   const authHyper$ = authSinks.HYPER
+  const authClip$ = authSinks.CLIP
 
   const actions = intent(sources.HYPER, sources.key$);
   const level$ = level(actions)
@@ -90,6 +91,7 @@ export default function List(sources) {
     DOM: dom$,
     HYPER: hyper$,
     LEVEL: level$,
-    state: authReducer$
+    state: authReducer$,
+    CLIP: authClip$
   }
 }
