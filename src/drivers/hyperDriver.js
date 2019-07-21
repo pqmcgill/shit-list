@@ -1,7 +1,7 @@
 import xs from 'xstream'
 import dropRepeats from 'xstream/extra/dropRepeats'
 import hyperdrive from 'hyperdrive'
-import ram from 'random-access-memory'
+import raw from 'random-access-web'
 import websocketStream from 'websocket-stream'
 import pump from 'pump'
 
@@ -16,10 +16,11 @@ export default function hyperDriver(sink$) {
     next({ name, key, persist }) {
       if (cache[name]) {
         let archive
+        const storage = raw('shitlists')
         if (key) {
-          archive = hyperdrive(ram, key)
+          archive = hyperdrive(storage, key)
         } else {
-          archive = hyperdrive(ram)
+          archive = hyperdrive(storage)
         }
 
         cache[name].archive = archive
@@ -120,13 +121,18 @@ function createReadStream(path, archive) {
   return xs.create({
     start(listener) {
       archive.ready(() => {
+        readFile()
         archive.db.watch(path, function() {
-          archive.readFile(path, (err, data) => {
-            if (err) return listener.error(err)
-            listener.next(data)
-          })
+          readFile()
         })
       })
+
+      function readFile() {
+        archive.readFile(path, (err, data) => {
+          if (err) return listener.error(err)
+          listener.next(data)
+        })
+      }
     },
     stop() {}
   })
