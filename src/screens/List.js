@@ -1,21 +1,7 @@
 import xs from 'xstream'
-import { h } from '@cycle/react'
-import { div, h2, p } from '@cycle/react-dom'
-import styled, { css } from 'styled-components'
-import ShadowBox from '../components/ShadowBox'
-import { colors } from '../style'
+import { div, h2 } from '@cycle/react-dom'
+import AuthStatus from './AuthStatus'
 
-const AuthText = styled.span`
-  font-weight: 700;
-  ${props => props.ok 
-    ? css`
-      color: ${colors.lightBlue};
-    `
-    : css`
-      color: ${colors.darkRed};
-    `
-  }
-`
 function intent(hyperSrc, keySrc) {
   const readKey$ = keySrc
 
@@ -45,15 +31,13 @@ function model(actions) {
   }))
 }
 
-function view(state$) {
-  return state$.map(({ archiveKey, archiveName }) => {
+function view(state$, authView$) {
+  return xs.combine(state$, authView$)
+    .map(([ state, authView ]) => {
     return (
       div([
-        h2(archiveName),
-        h(ShadowBox, [
-          h(AuthText, 'Not Authorized'),
-          ' (Expand to add a writer)'
-        ])
+        h2(state.archiveName),
+        authView
       ])
     )
   }).startWith('loading...')
@@ -91,14 +75,21 @@ function hyper(actions) {
 }
 
 export default function List(sources) {
+  const authSinks = AuthStatus(sources)
+  const authView$ = authSinks.DOM
+  const authReducer$ = authSinks.state
+  const authHyper$ = authSinks.HYPER
+
   const actions = intent(sources.HYPER, sources.key$);
   const level$ = level(actions)
-  const hyper$ = hyper(actions)
-  const dom$ = view(model(actions))
+  const listHyper$ = hyper(actions)
+  const dom$ = view(model(actions), authView$)
+  const hyper$ = xs.merge(listHyper$, authHyper$)
 
   return {
     DOM: dom$,
     HYPER: hyper$,
-    LEVEL: level$
+    LEVEL: level$,
+    state: authReducer$
   }
 }
