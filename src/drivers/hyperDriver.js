@@ -4,10 +4,11 @@ import hyperdrive from 'hyperdrive'
 import rai from 'random-access-idb'
 import websocketStream from 'websocket-stream'
 import pump from 'pump'
-import crypto from 'hypercore/lib/crypto'
+import crypto from 'hypercore-crypto'
 
 export default function hyperDriver(sink$) {
   const cache = {}
+  const dbCache = {}
 
   const open$ = sink$.filter(({ type }) => type === 'open')
   const write$ = sink$.filter(({ type }) => type === 'write')
@@ -34,6 +35,7 @@ export default function hyperDriver(sink$) {
           if (err) {
             cache[category]._e(err)
           } else {
+            console.log('isAuth', isAuth)
             cache[category]._n(isAuth)
           }
         }
@@ -43,12 +45,17 @@ export default function hyperDriver(sink$) {
 
   authorize$.subscribe({
     next({ key, localKey, category }) {
+      if (typeof localKey === 'string') {
+        localKey = Buffer.from(localKey, 'utf8')
+      }
       getArchive(key, archive => {
         archive.db.authorize(localKey, (err) => {
-          if (err) {
-            cache[category]._e(err)
-          } else {
-            cache[category]._n()
+          if (cache[category]) {
+            if (err) {
+              cache[category]._e(err)
+            } else {
+              cache[category]._n()
+            }
           }
         })
       })
@@ -105,17 +112,19 @@ export default function hyperDriver(sink$) {
   function getArchive(key, cb) {
     let archive
     if (key) {
+      console.log('loading existing')
       key = key.toString('hex')
-      const storage = rai(`shitlist-${key}`)
+      const dbName = `shitlist-${key}`
+      const storage = rai(dbName)
       archive = hyperdrive(storage, key)
     } else {
+      console.log('creating new')
       const { publicKey, secretKey } = crypto.keyPair()
       key = publicKey.toString('hex')
-      const storage = rai(`shitlist-${key}`)
+      const dbName = `shitlist-${key}`
+      const storage = rai(dbName)
       archive = hyperdrive(storage, publicKey, { secretKey })
     }
-
-    cache.archives[key] = archive
 
     archive.ready(() => {
       cb(archive)

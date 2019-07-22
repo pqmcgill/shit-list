@@ -35,7 +35,7 @@ const Key = styled.div`
   margin: 1rem 0;
 `
 
-const AuthForm = styled.form`
+const AuthForm = styled.div`
   margin: 0;
   display: flex;
   align-items: center;
@@ -67,13 +67,24 @@ function intent(keySrc, hyperSrc, domSrc) {
   const copyToClip$ = domSrc
     .select('clip')
     .events('click')
+
+  const keyInput$ = domSrc
+    .select('keyInput')
+    .events('change')
+
+  const keySubmit$ = domSrc
+    .select('authorizeBtn')
+    .events('click')
+    .debug('clicked')
     
   return {
     key$,
     archiveReady$,
     authorized$,
     expandCollapse$,
-    copyToClip$
+    copyToClip$,
+    keyInput$,
+    keySubmit$
   }
 }
 
@@ -82,10 +93,21 @@ function model(actions) {
     return {
       ...prev,
       auth: false,
+      key: undefined,
       localKey: undefined,
-      expanded: false
+      expanded: false,
+      keyInput: ''
     }
   });
+
+  const keyReducer$ = actions.key$.map(key =>
+    function keyReducer(prev) {
+      return {
+        ...prev,
+        key
+      }
+    }
+  )
 
   const localKeyReducer$ = actions.archiveReady$
     .map((archive) => function localKeyReducer(prev) {
@@ -111,11 +133,22 @@ function model(actions) {
       }
     })
 
+  const keyInputReducer$ = actions.keyInput$
+    .map(e => e.target.value)
+    .map(value => function keyInputReducer(prev) {
+      return {
+        ...prev,
+        keyInput: value
+      }
+    })
+
   return xs.merge(
     defaultReducer$,
+    keyReducer$,
     localKeyReducer$,
     authorizedReducer$,
-    expandCollapseReducer$
+    expandCollapseReducer$,
+    keyInputReducer$
   )
 }
 
@@ -142,7 +175,7 @@ function view(state$) {
         h(AuthForm, [
           h(Label, 'Add a writer:'),
           h(InlineInput, { sel: 'keyInput', value: keyInput }),
-          h(Button, 'Authorize')
+          h(Button, { sel: 'authorizeBtn' }, 'Authorize')
         ])
       ]
       : [ 
@@ -157,7 +190,7 @@ function view(state$) {
   }
 }
 
-function hyper(actions) {
+function hyper(actions, state$) {
   const open$ = actions.key$.map(key => ({
     type: 'open',
     category: 'open',
@@ -170,7 +203,20 @@ function hyper(actions) {
     key
   }))
 
-  return xs.merge(open$, checkAuth$)
+  const authorize$ = actions.keySubmit$
+    .map(() => state$
+      .map(state => [state.keyInput, state.key])
+      .take(1)
+    )
+    .flatten()
+    .map(([localKey, key]) => ({
+      type: 'authorize',
+      category: 'authorizing',
+      key,
+      localKey
+    })).debug('authorize')
+
+  return xs.merge(open$, checkAuth$, authorize$)
 }
 
 function clip(actions) {
@@ -185,7 +231,7 @@ export default function AuthStatus(sources) {
   const reducer$ = model(actions)
   const state$ = sources.state.stream
   const dom$ = view(state$)
-  const hyper$ = hyper(actions)
+  const hyper$ = hyper(actions, state$)
   const clip$ = clip(actions)
   return {
     DOM: dom$,
