@@ -4,169 +4,125 @@ import hyperdrive from 'hyperdrive'
 import rai from 'random-access-idb'
 import websocketStream from 'websocket-stream'
 import pump from 'pump'
+import crypto from 'hypercore/lib/crypto'
 
 export default function hyperDriver(sink$) {
-  const cache = {};
+  const cache = {}
 
   const open$ = sink$.filter(({ type }) => type === 'open')
   const write$ = sink$.filter(({ type }) => type === 'write')
-  const authorization$ = sink$.filter(({ type }) => type === 'authorize')
+  const read$ = sink$.filter(({ type }) => type === 'read')
+  const authorize$ = sink$.filter(({ type }) => type === 'authorize')
+  const isAuth$ = sink$.filter(({ type }) => type === 'isAuth')
 
   open$.subscribe({
-    next({ name, key, persist }) {
-      if (cache[name]) {
-        let archive
-        const storage = rai('shitlists')
-        if (key) {
-          archive = hyperdrive(storage, key)
-        } else {
-          archive = hyperdrive(storage)
-        }
-
-        cache[name].archive = archive
-
-        // activate archive stream
-        archive.ready(() => {
-          cache[name].archive$._n(archive)
-        });
-
-        const authorized$ = createAuthStream(archive)
-        authorized$
-          .compose(dropRepeats())
-          .subscribe({
-            next(v) {
-              cache[name].authorized$._n(v)
-            }
-          })
-
-        // activate read streams
-        Object.keys(cache[name].reads).forEach(path => {
-          const read$ = createReadStream(path, archive)
-          read$.subscribe({
-            next(v) {
-              cache[name].reads[path]._n(v)
-            }
-          })
-        })
-
-        // TODO: connect to peers
-        //// activate peer stream
-        //const peer$ = createPeerStream(dat, archive)
-        //cache[name].peer$.imitate(peer$)
-        
-        connectToGateway(archive)
-      }
-    }
-  })
-
-  write$.subscribe({
-    next({ name, path, data }) {
-      const archive = cache[name].archive
-      if (archive) {
-        archive.ready(() => {
-          archive.writeFile(path, data, function(err) {
-            if (err) throw err
-          })
-        })
-      } else {
-        throw new Error('archive not opened for ' + name)
-      }
-    }
-  })
-
-  authorization$.subscribe({
-    next({ name, key }) {
-      const archive = cache[name].archive
-      if (archive) {
-        archive.ready(() => {
-          archive.db.authorize(Buffer.from(key, 'hex'), (err) => {
-            if (err) throw err
-          })
-        })
-      } else {
-        throw new Error('archive not opened for ' + name)
-      }
-    }
-  })
-
-  return {
-    select(archiveName) {
-      if (!cache[archiveName]) {
-        cache[archiveName] = {
-          reads: {},
-          peer$: xs.create(),
-          archive$: xs.createWithMemory(),
-          authorized$: xs.createWithMemory()
-        }
-      }
-
-      return {
-        read(path) {
-          if (!cache[archiveName].reads[path]) {
-            cache[archiveName].reads[path] = xs.create()
-          }           
-
-          return cache[archiveName].reads[path]
-        },
-
-        peer$: cache[archiveName].peer$,
-        archive$: cache[archiveName].archive$,
-        authorized$: cache[archiveName].authorized$
-      } 
-    }
-  }
-}
-
-function createReadStream(path, archive) {
-  return xs.create({
-    start(listener) {
-      archive.ready(() => {
-        readFile()
-        archive.db.watch(path, readFile)
+    next({ key, category }) {
+      getArchive(key, archive => {
+        cache[category]._n(archive)
       })
-
-      function readFile() {
-        archive.readFile(path, (err, data) => {
-          if (err) return listener.error(err)
-          listener.next(data)
-        })
-      }
-    },
-    stop() {}
+    }
   })
-}
 
-
-//function createPeerStream(dat, archive) {
-//  return xs.create({
-//    start(listener) {
-//      archive.ready(() => {
-//        listener.next()
-//        dat.onNetworkActivity(archive, (network) => {
-//          listener.next(network)
-//        })
-//      });
-//    },
-//    stop() {}
-//  })
-//}
-
-function createAuthStream(archive) {
-  return xs.create({
-    start(listener) {
-      archive.ready(() => {
+  isAuth$.subscribe({
+    next({ key, category }) {
+      getArchive(key, archive => {
         archive.db.authorized(archive.db.local.key, handleUpdate)
         archive.db.watch(() => {
           archive.db.authorized(archive.db.local.key, handleUpdate)
         })
+        function handleUpdate(err, isAuth) {
+          if (err) {
+            cache[category]._e(err)
+          } else {
+            cache[category]._n(isAuth)
+          }
+        }
       })
-      function handleUpdate(err, isAuth) {
-        if (err) return listener.error(err)
-        listener.next(isAuth)
-      }
-    },
-    stop() {}
+    }
   })
+
+  authorize$.subscribe({
+    next({ key, localKey, category }) {
+      getArchive(key, archive => {
+        archive.db.authorize(localKey, (err) => {
+          if (err) {
+            cache[category]._e(err)
+          } else {
+            cache[category]._n()
+          }
+        })
+      })
+    }
+  })
+
+  read$.subscribe({
+    next({ key, category, path }) {
+      getArchive(key, archive => {
+        const readStream$ = xs.create({
+          start(listener) {
+            archive.ready(() => {
+              readFile()
+              archive.db.watch(path, readFile)
+            })
+
+            function readFile() {
+              archive.readFile(path, (err, data) => {
+                if (err) return listener.error(err)
+                listener.next(data)
+              })
+            }
+          },
+          stop() {}
+        })
+        readStream$.subscribe({
+          next(v) { cache[category]._n(v) }
+        })
+      })
+    }
+  })
+
+  write$.subscribe({
+    next({ key, category, path, data }) {
+      getArchive(key, archive => {
+        archive.writeFile(path, data, function(err) {
+          if (err)  { 
+            cache[category]._e(err)
+          } else { 
+            cache[category]._n()
+          }
+        })
+      })
+    }
+  })
+
+  return {
+    select(category) {
+      cache[category] = xs.createWithMemory()
+      return cache[category]
+    }
+  }
+
+  function getArchive(key, cb) {
+    let archive
+    if (key) {
+      key = key.toString('hex')
+      const storage = rai(`shitlist-${key}`)
+      archive = hyperdrive(storage, key)
+    } else {
+      const { publicKey, secretKey } = crypto.keyPair()
+      key = publicKey.toString('hex')
+      const storage = rai(`shitlist-${key}`)
+      archive = hyperdrive(storage, publicKey, { secretKey })
+    }
+
+    cache.archives[key] = archive
+
+    archive.ready(() => {
+      cb(archive)
+    })
+
+    connectToGateway(archive)
+  }
 }
 
 function connectToGateway(archive) {

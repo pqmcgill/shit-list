@@ -22,15 +22,19 @@ function intent(domSrc, hyperSrc) {
 
   const archiveReady$ = hyperSrc
     .select('newshitlist')
-    .archive$
     .map(archive => submitName$.take(1).mapTo(archive))
     .flatten()
     .map(({ key }) => key.toString('hex'))
+    .remember()
+
+  const nameWrite$ = hyperSrc
+    .select('writename')
 
   return {
     nameChange$,
     submitName$,
-    archiveReady$
+    archiveReady$,
+    nameWrite$
   }
 }
 
@@ -58,17 +62,21 @@ function hyper(actions) {
   const createShitList$ = actions.submitName$
     .map(() => ({
       type: 'open',
-      name: 'newshitlist'
+      category: 'newshitlist'
     }))
 
   const writeName$ = actions.archiveReady$
-    .map(() => actions.nameChange$.take(1))
+    .map((key) => actions.nameChange$
+      .take(1)
+      .map(name => ([key, name]))
+    )
     .flatten()
-    .map(name => ({
+    .map(([key, name]) => ({
       type: 'write',
-      name: 'newshitlist',
+      category: 'writename',
       path: '/name.txt',
-      data: name
+      data: name,
+      key
     }));
 
   return xs.merge(
@@ -78,8 +86,10 @@ function hyper(actions) {
 }
 
 function navigation(actions) {
-  return actions.archiveReady$
+  return actions.nameWrite$
     .take(1)
+    .map(() => actions.archiveReady$.take(1))
+    .flatten()
     .map(key => `/list/${key}`)
 }
 

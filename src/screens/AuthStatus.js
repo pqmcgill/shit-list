@@ -55,13 +55,10 @@ function intent(keySrc, hyperSrc, domSrc) {
   const key$ = keySrc
 
   const archiveReady$ = hyperSrc
-    .select('shitlist')
-    .archive$
+    .select('open')
 
   const authorized$ = hyperSrc
-    .select('shitlist')
-    .authorized$
-    .debug('auth')
+    .select('auth')
 
   const expandCollapse$ = domSrc
     .select('expand')
@@ -91,7 +88,7 @@ function model(actions) {
   });
 
   const localKeyReducer$ = actions.archiveReady$
-    .map(archive => function localKeyReducer(prev) {
+    .map((archive) => function localKeyReducer(prev) {
       return {
         ...prev,
         localKey: archive.db.local.key.toString('hex')
@@ -99,7 +96,7 @@ function model(actions) {
     })
 
   const authorizedReducer$ = actions.authorized$
-    .map(auth => function authorizedReducer(prev) {
+    .map((auth) => function authorizedReducer(prev) {
       return {
         ...prev,
         auth
@@ -161,18 +158,26 @@ function view(state$) {
 }
 
 function hyper(actions) {
-  return actions.key$.map(key => ({
+  const open$ = actions.key$.map(key => ({
     type: 'open',
-    name: 'shitlist',
+    category: 'open',
     key
   }))
+
+  const checkAuth$ = actions.archiveReady$.map(({ key }) => ({
+    type: 'isAuth',
+    category: 'auth',
+    key
+  }))
+
+  return xs.merge(open$, checkAuth$)
 }
 
 function clip(actions) {
   return actions.copyToClip$
     .map(() => actions.archiveReady$.take(1))
     .flatten()
-    .map(archive => archive.db.local.key.toString('hex'))
+    .map((archive) => archive.db.local.key.toString('hex'))
 }
 
 export default function AuthStatus(sources) {
