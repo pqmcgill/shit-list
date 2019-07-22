@@ -61,6 +61,7 @@ function intent(keySrc, hyperSrc, domSrc) {
   const authorized$ = hyperSrc
     .select('shitlist')
     .authorized$
+    .debug('auth')
 
   const expandCollapse$ = domSrc
     .select('expand')
@@ -122,28 +123,28 @@ function model(actions) {
 }
 
 function view(state$) {
-  return state$.map(({ auth, localKey, expanded }) => (
+  return state$.map((state) => (
     h(ShadowBox, [
-      h(CollapseExpandButton, { sel: 'expand', expanded }),
-      expanded ? renderExpanded(auth, localKey) : renderCollapsed(auth)
+      h(CollapseExpandButton, { sel: 'expand', expanded: state.expanded }),
+      state.expanded ? renderExpanded(state) : renderCollapsed(state)
     ])
   ))
 
-  function renderCollapsed(auth) {
+  function renderCollapsed({ auth }) {
     return [
       h(AuthText, { ok: auth }, auth ? 'Authorized' : 'Not Authorized'),
       auth ? ' (Expand to add a writer)' : ' (Expand for more info)'
     ]
   }
 
-  function renderExpanded(auth, localKey) {
+  function renderExpanded({ auth, localKey, keyInput }) {
     return auth
       ? [
         h(AuthText, { ok: auth }, 'You are authorized to write to this shit list'),
         p(['You can share this shit list to multiple devices or other people. Just copy the URL and paste it into another browser. Other copies may write to this list if you authorize them by passing their "local 🔑" into the form below.']),
         h(AuthForm, [
           h(Label, 'Add a writer:'),
-          h(InlineInput),
+          h(InlineInput, { sel: 'keyInput', value: keyInput }),
           h(Button, 'Authorize')
         ])
       ]

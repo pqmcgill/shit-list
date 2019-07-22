@@ -21,7 +21,7 @@ function intent(domSrc, hyperSrc) {
     .remember()
 
   const archiveReady$ = hyperSrc
-    .select('newShitList')
+    .select('newshitlist')
     .archive$
     .map(archive => submitName$.take(1).mapTo(archive))
     .flatten()
@@ -58,7 +58,7 @@ function hyper(actions) {
   const createShitList$ = actions.submitName$
     .map(() => ({
       type: 'open',
-      name: 'newShitList'
+      name: 'newshitlist'
     }))
 
   const writeName$ = actions.archiveReady$
@@ -66,7 +66,7 @@ function hyper(actions) {
     .flatten()
     .map(name => ({
       type: 'write',
-      name: 'newShitList',
+      name: 'newshitlist',
       path: '/name.txt',
       data: name
     }));

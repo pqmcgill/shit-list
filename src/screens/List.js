@@ -5,12 +5,12 @@ import AuthStatus from './AuthStatus'
 function intent(hyperSrc, keySrc) {
   const readKey$ = keySrc
 
-  const archiveReady$ = hyperSrc.select('shitlist')
+  const archiveReady$ = hyperSrc.select('list')
     .archive$
     .take(1)
 
   const readListName$ = hyperSrc
-    .select('shitlist')
+    .select('list')
     .read('/name.txt')
     .map(data => data.toString())
 
@@ -32,12 +32,12 @@ function model(actions) {
 }
 
 function view(state$, authView$) {
-  return xs.combine(state$, authView$)
+  return xs.combine(state$/*, authView$*/)
     .map(([ state, authView ]) => {
     return (
       div([
         h2(state.archiveName),
-        authView
+        // authView
       ])
     )
   }).startWith('loading...')
@@ -58,13 +58,13 @@ function level(actions) {
 function hyper(actions) {
   const openArchive$ = actions.readKey$.map(key => ({
     type: 'open',
-    name: 'shitlist',
+    name: 'list',
     key
   }));
 
   const readListName$ = actions.archiveReady$.mapTo({
     type: 'read',
-    name: 'shitlist',
+    name: 'list',
     path: '/name.txt',
   })
 
@@ -84,14 +84,14 @@ export default function List(sources) {
   const actions = intent(sources.HYPER, sources.key$);
   const level$ = level(actions)
   const listHyper$ = hyper(actions)
-  const dom$ = view(model(actions), authView$)
-  const hyper$ = xs.merge(listHyper$, authHyper$)
+  const dom$ = view(model(actions)/*, authView$*/)
+  const hyper$ = xs.merge(listHyper$/*, authHyper$*/)
 
   return {
     DOM: dom$,
     HYPER: hyper$,
     LEVEL: level$,
-    state: authReducer$,
-    CLIP: authClip$
+    // state: authReducer$,
+    // CLIP: authClip$
   }
 }

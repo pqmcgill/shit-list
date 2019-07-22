@@ -1,7 +1,7 @@
 import xs from 'xstream'
 import dropRepeats from 'xstream/extra/dropRepeats'
 import hyperdrive from 'hyperdrive'
-import raw from 'random-access-web'
+import rai from 'random-access-idb'
 import websocketStream from 'websocket-stream'
 import pump from 'pump'
 
@@ -16,7 +16,7 @@ export default function hyperDriver(sink$) {
     next({ name, key, persist }) {
       if (cache[name]) {
         let archive
-        const storage = raw('shitlists')
+        const storage = rai('shitlists')
         if (key) {
           archive = hyperdrive(storage, key)
         } else {
