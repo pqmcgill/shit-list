@@ -5,10 +5,15 @@ import rai from 'random-access-idb'
 import websocketStream from 'websocket-stream'
 import pump from 'pump'
 import crypto from 'hypercore-crypto'
+import memo from 'memoizee'
+
+const memoArchive = memo(function(key) {
+})
 
 export default function hyperDriver(sink$) {
   const cache = {}
   const dbCache = {}
+  let archive
 
   const open$ = sink$.filter(({ type }) => type === 'open')
   const write$ = sink$.filter(({ type }) => type === 'write')
@@ -109,10 +114,9 @@ export default function hyperDriver(sink$) {
     }
   }
 
+
   function getArchive(key, cb) {
-    let archive
     if (key) {
-      console.log('loading existing')
       key = key.toString('hex')
       const dbName = `shitlist-${key}`
       const storage = rai(dbName)
