@@ -1,12 +1,12 @@
-import xs from 'xstream'
-import { h } from '@cycle/react'
+import React from 'react'
 import styled from 'styled-components'
-import { getSink } from './util/getSink'
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
 import TopBar from './components/TopBar'
-import Home from './screens/Home'
-import CreateList from './screens/CreateList'
-import AddLink from './screens/AddLink'
-import List from './screens/List'
+import Home from './screens/Home2'
+import CreateList from './screens/CreateList2'
+import AddLink from './screens/AddLink2'
+import List from './screens/List2'
+import NoMatch from './screens/NoMatch'
 import { colors } from './style'
 
 const Wrapper = styled.div`
@@ -25,39 +25,21 @@ const Content = styled.section`
   margin: 1rem 1rem 2rem 1rem;
 `
 
-export default function App(sources) {
-  const topBarSinks = TopBar(sources)
-
-  const pageSink$ = sources.router.routedComponent({
-    '/home': Home,
-    '/create': CreateList,
-    '/addlink': AddLink,
-    '/list/:key': key => sources => List({ ...sources, key$: xs.of(key) }),
-    '*': () => ({ DOM: xs.of('404'), router: xs.of('/home') })
-  })(sources);
-
-  const layout$ = xs.combine(
-    topBarSinks.DOM,
-    pageSink$.compose(getSink('DOM'))
-  ).map(([topBar, page]) => {
-    return h(Wrapper, [
-      topBar,
-      h(Content, [page])
-    ])
-  })
-
-  const nav$ = xs.merge(
-    pageSink$.compose(getSink('router')),
-    topBarSinks.router
+export default function App() {
+  return (
+    <Router>
+      <Wrapper>
+        <TopBar />
+        <Content>
+          <Switch>
+            <Route path='/' exact component={Home} />
+            <Route path='/create' component={CreateList} />
+            <Route path='/addlink' component={AddLink} />
+            <Route path='/list/:key' component={List} />
+            <Route component={NoMatch} />
+          </Switch>
+        </Content>
+      </Wrapper>
+    </Router>
   )
-
-  return {
-    DOM: layout$,
-    router: nav$,
-    HYPER: pageSink$.compose(getSink('HYPER')),
-    LEVEL: pageSink$.compose(getSink('LEVEL')),
-    state: pageSink$.compose(getSink('state')),
-    CLIP: pageSink$.compose(getSink('CLIP'))
-  }
 }
-

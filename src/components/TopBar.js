@@ -1,6 +1,6 @@
-import xs from 'xstream'
-import { h } from '@cycle/react'
+import React from 'react'
 import styled from 'styled-components'
+import { Link } from 'react-router-dom'
 import { colors, emojis } from '../style'
 
 const Header = styled.nav`
@@ -13,7 +13,7 @@ const Header = styled.nav`
   border-bottom: solid 1px ${colors.neutral10};
 `
 
-const Logo = styled.a`
+const Logo = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -27,30 +27,19 @@ const Logo = styled.a`
 `
 
 const FirstWord = styled.span`
-color: #8E3B46;
+  color: ${colors.darkRed};
 `
 
-export default function TopBar(sources) {
-  const logoClick$ = sources.DOM
-    .select('logo')
-    .events('click')
-    .debug('click')
-
-  const navToHome$ = logoClick$
-    .mapTo('/home')
-    .debug('nav')
-
-  const dom$ = xs.of(
-    h(Header, [
-      h(Logo, { sel: 'logo' }, [
-        `${emojis.poop} `,
-        h(FirstWord,'Shit'),
-        'List'
-      ])
-    ])
+export default function TopBar() {
+  return (
+    <Header>
+      <Logo to='/'>
+        {emojis.poop}
+        {' '}
+        <FirstWord>Shit</FirstWord>
+        List
+      </Logo>
+    </Header>
   )
-  return {
-    DOM: dom$,
-    router: navToHome$
-  }
 }
+
