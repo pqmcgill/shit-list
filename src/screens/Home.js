@@ -16,10 +16,6 @@ const Bold = styled.b`
   color: ${colors.darkBlue};
 `
 
-const Lists = styled.ul`
-  padding: 0;
-`
-
 const List = styled.li`
   list-style-type: none;
   border: solid 2px ${colors.lightBlue};
