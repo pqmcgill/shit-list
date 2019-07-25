@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { colors } from '../style'
 
 const Button = styled.button`
@@ -18,12 +18,21 @@ const Button = styled.button`
   outline: none;
 
   &:active {
-    transform: scale(0.9)
+    ${props => !props.disabled && css`
+      transform: scale(0.9)
+    `}
   }
 
   &:hover {
-    transform: scale(1.05);
+    ${props => !props.disabled && css`
+      transform: scale(1.05);
+    `}
   }
+
+  ${props => props.disabled && css`
+    opacity: 0.5;
+    cursor: progress;
+  `}
 `
 
 export default Button
