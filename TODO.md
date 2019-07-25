@@ -17,7 +17,7 @@
  * data export
  * ~~local persistence (level-js)~~
  * user identification
- * authorization
+ * ~~authorization~~
  * ship it!
 
  ## Nice to haves (in no particular order)

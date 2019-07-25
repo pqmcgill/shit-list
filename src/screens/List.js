@@ -1,6 +1,7 @@
 import xs from 'xstream'
 import { div, h2 } from '@cycle/react-dom'
 import AuthStatus from './AuthStatus'
+import Data from './Data'
 
 function intent(hyperSrc, keySrc) {
   const readKey$ = keySrc
@@ -29,13 +30,14 @@ function model(actions) {
   }))
 }
 
-function view(state$, authView$) {
-  return xs.combine(state$, authView$)
-    .map(([ state, authView ]) => {
+function view(state$, authView$, dataView$) {
+  return xs.combine(state$, authView$, dataView$)
+    .map(([ state, authView, dataView ]) => {
     return (
       div([
         h2(state.archiveName),
-        authView
+        authView,
+        dataView
       ])
     )
   }).startWith('loading...')
@@ -80,17 +82,32 @@ export default function List(sources) {
   const authHyper$ = authSinks.HYPER
   const authClip$ = authSinks.CLIP
 
-  const actions = intent(sources.HYPER, sources.key$);
+  const dataSinks = Data(sources)
+  const dataView$ = dataSinks.DOM
+  const dataReducer$ = dataSinks.state
+  const dataHyper$ = dataSinks.HYPER
+
+  const actions = intent(sources.HYPER, sources.key$)
   const level$ = level(actions)
   const listHyper$ = hyper(actions)
-  const dom$ = view(model(actions), authView$)
-  const hyper$ = xs.merge(listHyper$, authHyper$)
+  const dom$ = view(model(actions), authView$, dataView$)
+  
+  const hyper$ = xs.merge(
+    listHyper$, 
+    authHyper$,
+    dataHyper$
+  )
+
+  const reducer$ = xs.merge(
+    authReducer$,
+    dataReducer$
+  )
 
   return {
     DOM: dom$,
     HYPER: hyper$,
     LEVEL: level$,
-    state: authReducer$,
+    state: reducer$,
     CLIP: authClip$
   }
 }

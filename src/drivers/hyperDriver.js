@@ -1,5 +1,4 @@
 import xs from 'xstream'
-import dropRepeats from 'xstream/extra/dropRepeats'
 import hyperdrive from 'hyperdrive'
 import rai from 'random-access-idb'
 import websocketStream from 'websocket-stream'
@@ -8,11 +7,11 @@ import crypto from 'hypercore-crypto'
 
 export default function hyperDriver(sink$) {
   const cache = {}
-  const dbCache = {}
 
   const open$ = sink$.filter(({ type }) => type === 'open')
   const write$ = sink$.filter(({ type }) => type === 'write')
   const read$ = sink$.filter(({ type }) => type === 'read')
+  const readDir$ = sink$.filter(({ type }) => type === 'readdir')
   const authorize$ = sink$.filter(({ type }) => type === 'authorize')
   const isAuth$ = sink$.filter(({ type }) => type === 'isAuth')
 
@@ -88,6 +87,35 @@ export default function hyperDriver(sink$) {
     }
   })
 
+  readDir$.subscribe({
+    next({ key, category, path }) {
+      getArchive(key, archive => {
+        const readDirStream$ = xs.create({
+          start(listener) {
+            archive.ready(() => {
+              readDir()
+              // TODO: why isn't this working? apparently it does?
+              archive.db.watch(() => {
+                console.log('watched')
+                readDir()
+              })
+            })
+            function readDir() {
+              archive.readdir(path, (err, ls) => {
+                if (err) return listener.error(err)
+                listener.next(ls)
+              })
+            }
+          },
+          stop() {}
+        })
+        readDirStream$.subscribe({
+          next(v) { cache[category]._n(v) }
+        })
+      })
+    }
+  })
+
   write$.subscribe({
     next({ key, category, path, data }) {
       getArchive(key, archive => {
@@ -104,7 +132,9 @@ export default function hyperDriver(sink$) {
 
   return {
     select(category) {
-      cache[category] = xs.createWithMemory()
+      if (!cache[category]) {
+        cache[category] = xs.createWithMemory()
+      }
       return cache[category]
     }
   }
