@@ -46,7 +46,7 @@ export default function hyperDriver(sink$) {
   authorize$.subscribe({
     next({ key, localKey, category }) {
       if (typeof localKey === 'string') {
-        localKey = Buffer.from(localKey, 'utf8')
+        localKey = Buffer.from(localKey, 'hex')
       }
       getArchive(key, archive => {
         archive.db.authorize(localKey, (err) => {
