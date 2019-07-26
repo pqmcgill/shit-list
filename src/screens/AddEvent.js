@@ -10,14 +10,23 @@ const FormButton = styled(Button)`
   margin: 5px;
 `
 
+function intent(domSrc) {
+  return {
+    submit$: domSrc.select('form')
+      .events('submit')
+  }
+}
+
 function view() {
   return (
-    xs.of(h(CreateEventForm)))
+    xs.of(h(CreateEventForm, { sel: 'form' })))
 }
 
 export default function AddList(sources) {
+  const actions = intent(sources.DOM)
   const dom$ = view();
   return {
     DOM: dom$,
+    submit$: actions.submit$
   }
 }
