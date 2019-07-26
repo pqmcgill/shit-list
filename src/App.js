@@ -22,7 +22,9 @@ const Wrapper = styled.div`
 `
 
 const Content = styled.section`
-  margin: 1rem 1rem 2rem 1rem;
+  margin: 1rem 1rem 0 1rem;
+  display: flex;
+  flex: 1;
 `
 
 export default function App(sources) {

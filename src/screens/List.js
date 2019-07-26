@@ -1,7 +1,15 @@
 import xs from 'xstream'
+import { h } from '@cycle/react'
 import { div, h2 } from '@cycle/react-dom'
+import styled from 'styled-components'
 import AuthStatus from './AuthStatus'
 import Data from './Data'
+
+const ShitListContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+`
 
 function intent(hyperSrc, keySrc) {
   const readKey$ = keySrc
@@ -34,7 +42,7 @@ function view(state$, authView$, dataView$) {
   return xs.combine(state$, authView$, dataView$)
     .map(([ state, authView, dataView ]) => {
     return (
-      div([
+      h(ShitListContainer, [
         h2(state.archiveName),
         authView,
         dataView
