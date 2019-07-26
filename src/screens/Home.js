@@ -219,12 +219,10 @@ export default function Home(sources) {
 
   const reducer$ = xs.merge(
     homeReducer$, 
-    listSinks.state
   )
 
   const nav$ = xs.merge(
     homeNav$, 
-    listSinks.router
   )
 
   return {
