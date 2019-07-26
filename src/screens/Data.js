@@ -49,7 +49,6 @@ function intent(keySrc, hyperSrc, domSrc) {
     .select('testWrite')
     .map(() => archiveReady$)
     .flatten()
-    .debug('here')
 
   const dayChange$ = domSrc
     .select('dayNav')

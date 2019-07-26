@@ -11,7 +11,10 @@ import { emojis, colors } from '../style';
 const FormButton = styled(Button)`
   min-width: 100px;
   margin: 5px;
-  ${props => props.isDisabled && `background-color:#C0C0C0`}
+  ${props => props.isDisabled && `
+    background-color:#C0C0C0;
+    pointer-events:none;
+  `}
 `
 const CancelButton = styled(Button)`
   background-color: ${colors.white};
