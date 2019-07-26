@@ -1,6 +1,7 @@
 import xs from 'xstream'
 import delay from 'xstream/extra/delay'
-import { div, button } from '@cycle/react-dom';
+import { div } from '@cycle/react-dom';
+import { today, nextDay, previousDay } from '../lib/day'
 
 export default function Data(sources) {
   const state$ = sources.state.stream
@@ -43,13 +44,23 @@ function intent(keySrc, hyperSrc, domSrc) {
 }
 
 function model(actions) {
-  return xs.empty()
+  const defaultReducer$ = xs.of(
+    function defaultReducer(prev) {
+      return {
+        day: nextDay(today())
+      }
+    }
+  )
+  return xs.merge(
+    defaultReducer$
+  )
 }
 
 function view(state$) {
-  return xs.of(
-    div('Data')
-  )
+  return state$.map(state => ([
+    div('Data'),
+    state.day
+  ]))
 }
 
 function hyper(actions) {
