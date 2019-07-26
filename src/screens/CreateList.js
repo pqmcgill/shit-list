@@ -2,9 +2,7 @@ import React, { Fragment, useState } from 'react'
 import { Redirect } from 'react-router-dom'
 import Input from '../components/Input'
 import Button from '../components/Button'
-import hyperdrive from 'hyperdrive'
-import rai from 'random-access-idb'
-import crypto from 'hypercore-crypto'
+import getArchive from '../lib/getArchive';
 
 export default function CreateList() {
   const [name, setName] = useState('')
@@ -17,11 +15,7 @@ export default function CreateList() {
 
   function handleSubmit() {
     setProcessing(true)
-    const { publicKey, secretKey } = crypto.keyPair()
-    const keyHex = publicKey.toString('hex')
-    const storage = rai(`shitlist-db-${keyHex}`)
-    const archive = hyperdrive(storage, publicKey, { secretKey })
-    archive.ready(() => {
+    getArchive(null, archive => {
       archive.writeFile('/name.txt', name, (err) => {
         if (err) throw err
         setKey(archive.key.toString('hex'))

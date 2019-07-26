@@ -1,12 +1,11 @@
 import React, { useState, useEffect, Fragment } from 'react'
-import hyperdrive from 'hyperdrive'
-import rai from 'random-access-idb'
 import styled, { css } from 'styled-components'
 import { colors } from '../style'
 import ShadowBox from '../components/ShadowBox'
 import Button from '../components/Button'
 import CollapseExpandButton from '../components/CollapseExpandButton'
 import Input from '../components/Input'
+import getArchive from '../lib/getArchive'
 
 export default function List(props) {
   const key = props.match.params.key
@@ -15,9 +14,8 @@ export default function List(props) {
   const [archiveName, setArchiveName] = useState()
 
   useEffect(() => {
-    let _archive = hyperdrive(rai(`shitlist-db-${key}`), keyBuf)
-    setArchive(_archive)
-    _archive.ready(() => {
+    getArchive(key, _archive => {
+      setArchive(_archive)
       console.log('actual', _archive.key.toString('hex'))
       _archive.readFile('/name.txt', (err, name) => {
         if (err) throw err
