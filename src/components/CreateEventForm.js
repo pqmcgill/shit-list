@@ -7,6 +7,8 @@ import TextArea from '../components/TextArea';
 import Modal from '../components/Modal';
 import styled from 'styled-components';
 import { emojis, colors } from '../style';
+import EatForm from './EatForm';
+import SleepForm from './SleepForm';
 
 const FormButton = styled(Button)`
   min-width: 100px;
@@ -50,14 +52,6 @@ const CheckboxContainer = styled.div`
   vertical-align: middle;
 `
 
-const EatIcon = styled.span`
-  font-size:3rem;
-  content:${emojis.eat},
-`
-const SleepIcon = styled.span`
-  font-size:3rem;
-  content:${emojis.sleep},
-`
 const PoopIcon = styled.span`
   font-size:3rem;
   content:${emojis.poop},
@@ -78,10 +72,9 @@ class CreateEventForm extends Component {
     }
   } 
 
-  submit = () => {
+  submit = (data) => {
    const {onSubmit} = this.props;
-   const {formData} = this.state;
-   onSubmit(formData);
+   onSubmit(data);
   }
 
   cancel = () => {
@@ -111,10 +104,9 @@ class CreateEventForm extends Component {
     return typeSelected ?
       (
         <Modal>
-          <FormDiv>
             {
-              formData.type === 'eat' ? <EatIcon>{emojis.eat}</EatIcon> :
-              formData.type === 'sleep' ? <SleepIcon>{emojis.sleep}</SleepIcon> :
+              formData.type === 'eat' ? <EatForm formData={formData} submit={this.submit} cancel={this.cancel}/> :
+              formData.type === 'sleep' ? <SleepForm formData={formData} submit={this.submit} cancel={this.cancel} /> :
               <PoopIcon>{emojis.poop}</PoopIcon>
             }
             <FormGroup>
@@ -140,7 +132,6 @@ class CreateEventForm extends Component {
                 <FormButton onClick={this.submit} isDisabled={!formData.loggedBy}>Submit</FormButton>
                 <CancelButton onClick={this.cancel} >Cancel</CancelButton>
               </FormGroup>
-          </FormDiv>
         </Modal>
       ) :
       (
