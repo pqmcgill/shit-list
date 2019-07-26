@@ -16,12 +16,13 @@ export default function Data(sources) {
   const addEventSinks = AddEvent(sources)
   const addEventDom$ = addEventSinks.DOM
   const submit$ = addEventSinks.submit$
+  const cancel$ = addEventSinks.cancel$
 
   const state$ = sources.state.stream
   const actions = intent(sources.key$, sources.HYPER, sources.DOM)
   const reducer$ = model(actions)
   const dom$ = view(state$, addEventDom$)
-  const hyper$ = hyper(actions, state$, submit$)
+  const hyper$ = hyper(actions, state$, submit$, cancel$)
 
   return {
     DOM: dom$,
@@ -54,9 +55,13 @@ function intent(keySrc, hyperSrc, domSrc) {
     .select('dayNav')
     .events('change')
 
-  const click$ = domSrc
+  const open$ = domSrc
     .select('btn')
     .events('click')
+
+  const cancel$ = domSrc
+    .select('form')
+    .events('cancel')
 
   return {
     archiveReady$,
@@ -64,7 +69,8 @@ function intent(keySrc, hyperSrc, domSrc) {
     readdirResponse$,
     writeResponse$,
     dayChange$,
-    click$
+    open$,
+    cancel$
   }
 }
 
@@ -95,21 +101,24 @@ function model(actions) {
       }
     })
 
-  const isAddingReducer$ = actions.click$
-    .map(() => (
-      function isAddingReducer(prev) {
-        return {
-          ...prev,
-          isAdding: true
-        }
+  const isAddingReducer$ = xs.merge(
+    actions.open$.mapTo(true),
+    actions.cancel$.mapTo(false),
+    actions.writeResponse$.mapTo(false)
+  ).map(bool => (
+    function addReducer(prev) {
+      return {
+        ...prev,
+        isAdding: bool,
       }
-    ))
+    }
+  ))
 
   return xs.merge(
     defaultReducer$,
     keyReducer$,
     dayReducer$,
-    isAddingReducer$
+    isAddingReducer$,
   )
 }
 
@@ -119,8 +128,8 @@ function view(state$, addEventDom$) {
     h(DataList, [
       button({ sel: 'btn' }, 'Click!')
     ]),
+    state.isAdding && addEventDom,
     h(DayNav, { sel: 'dayNav' }),
-    state.isAdding && addEventDom
   ]))
 }
 

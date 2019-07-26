@@ -4,14 +4,19 @@ import DateTime from '../components/DateTime';
 import FormDiv from '../components/FormDiv';
 import Input from '../components/Input';
 import TextArea from '../components/TextArea';
+import Modal from '../components/Modal';
 import styled from 'styled-components';
-import { emojis } from '../style';
+import { emojis, colors } from '../style';
 
 const FormButton = styled(Button)`
   min-width: 100px;
   margin: 5px;
 `
-const FormGroup = styled.p`
+const CancelButton = styled(Button)`
+  background-color: ${colors.white};
+  color: ${colors.neutral80}
+`
+const FormGroup = styled.div`
   width: 100%;
   padding: 5px;
   display: flex;
@@ -56,8 +61,11 @@ class CreateEventForm extends Component {
   submit = () => {
    const {onSubmit} = this.props;
    const {formData} = this.state;
-   console.log(formData);
    onSubmit(formData);
+  }
+
+  cancel = () => {
+    this.props.onCancel();
   }
 
   selectType = e => {
@@ -82,37 +90,44 @@ class CreateEventForm extends Component {
     const { formData, typeSelected }=this.state;
     return typeSelected ?
       (
-        <FormDiv>
-          {
-            formData.type === 'eat' ? <EatIcon>{emojis.eat}</EatIcon> :
-            formData.type === 'sleep' ? <SleepIcon>{emojis.sleep}</SleepIcon> :
-            <PoopIcon>{emojis.poop}</PoopIcon>
-          }
-          <FormGroup>
-            <strong>Logged By:</strong>
-            <NameInput value={formData.loggedBy} onChange={this.setName} placeholder={"Name"} />
-            <strong>Entered on</strong>
-            <DateTime date={formData.entryTime} />
-          </FormGroup>
-          <FormGroup>
-            Notes:
-            <TextArea rows={5} value={formData.notes} onChange={this.setNotes} />
+        <Modal>
+          <FormDiv>
+            {
+              formData.type === 'eat' ? <EatIcon>{emojis.eat}</EatIcon> :
+              formData.type === 'sleep' ? <SleepIcon>{emojis.sleep}</SleepIcon> :
+              <PoopIcon>{emojis.poop}</PoopIcon>
+            }
+            <FormGroup>
+              <strong>Logged By:</strong>
+              <NameInput value={formData.loggedBy} onChange={this.setName} placeholder={"Name"} />
+              <strong>Entered on</strong>
+              <DateTime date={formData.entryTime} />
             </FormGroup>
             <FormGroup>
-            <label>
-            <Checkbox checked={formData.panic} onChange={this.setPanic} />
-            <span>Panic?</span>
-            </label>
-            </FormGroup>
-          <FormButton onClick={this.submit} >Submit</FormButton>
-        </FormDiv>
+              Notes:
+              <TextArea rows={5} value={formData.notes} onChange={this.setNotes} />
+              </FormGroup>
+              <FormGroup>
+              <label>
+              <Checkbox checked={formData.panic} onChange={this.setPanic} />
+              <span>Panic?</span>
+              </label>
+              </FormGroup>
+              <FormGroup>
+                <FormButton onClick={this.submit} >Submit</FormButton>
+                <CancelButton onClick={this.cancel} >Cancel</CancelButton>
+              </FormGroup>
+          </FormDiv>
+        </Modal>
       ) :
       (
-        <FormDiv>
-          <FormButton onClick={this.selectType} value='eat'>Eat</FormButton>
-          <FormButton onClick={this.selectType} value='sleep'>Sleep</FormButton>
-          <FormButton onClick={this.selectType} value='poop'>Poop</FormButton>
-        </FormDiv>
+        <Modal>
+          <FormDiv>
+            <FormButton onClick={this.selectType} value='eat'>Eat</FormButton>
+            <FormButton onClick={this.selectType} value='sleep'>Sleep</FormButton>
+            <FormButton onClick={this.selectType} value='poop'>Poop</FormButton>
+          </FormDiv>
+        </Modal>
       )
   }
 }
