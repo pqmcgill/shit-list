@@ -11,6 +11,7 @@ import { emojis, colors } from '../style';
 const FormButton = styled(Button)`
   min-width: 100px;
   margin: 5px;
+  ${props => props.isDisabled && `background-color:#C0C0C0`}
 `
 const CancelButton = styled(Button)`
   background-color: ${colors.white};
@@ -114,7 +115,7 @@ class CreateEventForm extends Component {
               </label>
               </FormGroup>
               <FormGroup>
-                <FormButton onClick={this.submit} >Submit</FormButton>
+                <FormButton onClick={this.submit} isDisabled={!formData.loggedBy}>Submit</FormButton>
                 <CancelButton onClick={this.cancel} >Cancel</CancelButton>
               </FormGroup>
           </FormDiv>
