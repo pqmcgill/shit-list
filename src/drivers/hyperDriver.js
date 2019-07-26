@@ -103,7 +103,16 @@ export default function hyperDriver(sink$) {
             function readDir() {
               archive.readdir(path, (err, ls) => {
                 if (err) return listener.error(err)
-                listener.next(ls)
+                const files = {}
+                ls.forEach((fileName, i) => {
+                  archive.readFile(path + '/' + fileName, (err, data) => {
+                    if (err) return listener.error(err)
+                    files[i] = { name: fileName, data }
+                    if (Object.keys(files).length === ls.length) {
+                      listener.next(files)
+                    }
+                  })
+                })
               })
             }
           },

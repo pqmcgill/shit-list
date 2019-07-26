@@ -1,4 +1,5 @@
 import xs from 'xstream'
+import delay from 'xstream/extra/delay'
 import { div, button } from '@cycle/react-dom';
 
 export default function Data(sources) {
@@ -62,7 +63,19 @@ function hyper(actions) {
       key
     }))
 
+  const write$ = actions.archiveReady$
+    .take(1)
+    .map(({ key }) => ({
+      type: 'write',
+      category: 'testWrite',
+      path: '/data/foo.bar',
+      data: 'helloworld',
+      key
+    }))
+    .compose(delay(3000))
+
   return xs.merge(
-    readdirRequest$
+    readdirRequest$,
+    write$
   )
 }
