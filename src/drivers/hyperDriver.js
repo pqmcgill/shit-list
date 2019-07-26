@@ -34,7 +34,6 @@ export default function hyperDriver(sink$) {
           if (err) {
             cache[category]._e(err)
           } else {
-            console.log('isAuth', isAuth)
             cache[category]._n(isAuth)
           }
         }
@@ -104,6 +103,7 @@ export default function hyperDriver(sink$) {
               archive.readdir(path, (err, ls) => {
                 if (err) return listener.error(err)
                 const files = {}
+                if (ls.length === 0) listener.next([])
                 ls.forEach((fileName, i) => {
                   archive.readFile(path + '/' + fileName, (err, data) => {
                     if (err) return listener.error(err)
@@ -151,13 +151,11 @@ export default function hyperDriver(sink$) {
   function getArchive(key, cb) {
     let archive
     if (key) {
-      console.log('loading existing')
       key = key.toString('hex')
       const dbName = `shitlist-${key}`
       const storage = rai(dbName)
       archive = hyperdrive(storage, key)
     } else {
-      console.log('creating new')
       const { publicKey, secretKey } = crypto.keyPair()
       key = publicKey.toString('hex')
       const dbName = `shitlist-${key}`
