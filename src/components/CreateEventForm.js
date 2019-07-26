@@ -30,9 +30,25 @@ const FormGroup = styled.div`
 const NameInput = styled(Input)`
   width: 50%;
 `
-const Checkbox = props => (
-  <input type="checkbox" {...props} />
-)
+
+const HiddenCheckbox = styled.input.attrs({ type: 'checkbox' })`
+  // Hide checkbox visually but remain accessible to screen readers.
+  // Source: https://polished.js.org/docs/#hidevisually
+  border: 0;
+  clip: rect(0 0 0 0);
+  clippath: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+`
+const CheckboxContainer = styled.div`
+  display: inline-block;
+  vertical-align: middle;
+`
 
 const EatIcon = styled.span`
   font-size:3rem;
@@ -113,8 +129,11 @@ class CreateEventForm extends Component {
               </FormGroup>
               <FormGroup>
               <label>
-              <Checkbox checked={formData.panic} onChange={this.setPanic} />
-              <span>Panic?</span>
+                <CheckboxContainer>
+                  <HiddenCheckbox checked={formData.panic} onChange={this.setPanic} />
+                  {formData.panic ? '✅' : '⬜️'}
+                </CheckboxContainer>
+                <span>Panic?</span>
               </label>
               </FormGroup>
               <FormGroup>

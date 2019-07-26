@@ -4,7 +4,7 @@ import styled from 'styled-components';
 
 const DateWrapper = styled.div`
   display: inline-block;
-  font-size: 1rem;
+  font-size: 1.2rem;
 `
 
 const DateTime = function(props) {

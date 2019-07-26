@@ -15,6 +15,7 @@ const FormDiv = styled.div`
   padding: 20px;
   margin: auto;
   overflow-y: scroll;
+  font-size:1.2rem;
 `
 
 export default FormDiv;
