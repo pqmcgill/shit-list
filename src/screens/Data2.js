@@ -12,6 +12,8 @@ export default function Data2({ archive }) {
 
   const dayPath = day.split('/').join('-')
 
+  console.log(dayPath)
+
   function readdir() {
     console.log(dayPath)
     archive.readdir(`/data/${dayPath}`, (err, ls) => {
