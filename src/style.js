@@ -1,7 +1,9 @@
 export const emojis = {
   poop: '💩',
   greenCheck: '✅',
-  redX: '❌'
+  redX: '❌',
+  eat: '🍽',
+  sleep: '🛌'
 }
 
 export const colors = {

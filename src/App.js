@@ -6,6 +6,7 @@ import TopBar from './components/TopBar'
 import Home from './screens/Home'
 import CreateList from './screens/CreateList'
 import AddLink from './screens/AddLink'
+import AddEvent from './screens/AddEvent'
 import List from './screens/List'
 import { colors } from './style'
 
@@ -34,6 +35,7 @@ export default function App(sources) {
     '/home': Home,
     '/create': CreateList,
     '/addlink': AddLink,
+    '/addEvent': AddEvent,
     '/list/:key': key => sources => List({ ...sources, key$: xs.of(key) }),
     '*': () => ({ DOM: xs.of('404'), router: xs.of('/home') })
   })(sources);
