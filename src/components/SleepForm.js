@@ -33,8 +33,9 @@ export default class EatForm extends Component {
   }
 
   setAmount = e => {
+    // TODO: how to validate the time input?
     if (e.target.id === 'start-time') {
-      this.setState({...this.state, start: Date.parse(e.target.value)});
+      this.setState({...this.state, start: e.target.value});
     }
     this.setState({...this.state, amount: e.target.value});
   }
