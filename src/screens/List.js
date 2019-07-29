@@ -24,7 +24,7 @@ const Name = styled.h2`
   align-items: center;
 `
 
-const Hash = styled(Button)`
+const Share = styled(Button)`
   height: 2.5rem;
   font-size: 0.8rem;
   font-weight: 500;
@@ -65,7 +65,7 @@ export default function List(props) {
 
   return (
     <ShitListContainer>
-      <Name>{ archiveName } <Hash onClick={copyUrl}>{ `📋 ${prettyHash(key)}` }</Hash></Name>
+      <Name>{ archiveName } <Share onClick={copyUrl}>{ `Copy Url to 📋` }</Share></Name>
       {archive && (
         <Fragment>
           <AuthStatus archive={ archive } />

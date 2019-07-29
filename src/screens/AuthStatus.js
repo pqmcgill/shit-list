@@ -124,7 +124,7 @@ function Expanded({ archive, auth, localKey, onSubmit }) {
       <AuthForm>
         <Label>Add a writer:</Label>
         <InlineInput value={keyInput} onChange={handleChange}/>
-        <Button onClick={handleSubmit} loading={loading}>Authorize</Button>
+        <Button onClick={handleSubmit} isLoading={loading}>Authorize</Button>
       </AuthForm>
     </Fragment> :
     <Fragment>
