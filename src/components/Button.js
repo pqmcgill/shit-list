@@ -24,6 +24,10 @@ const Button = styled.button`
   &:hover {
     transform: scale(1.05);
   }
+
+  &:disabled {
+    cursor: wait;
+  }
 `
 
 export default Button

@@ -33,6 +33,7 @@ const List = styled.li`
   font-size: 1.2rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   color: ${colors.darkBlue};
   transform: translateZ(0);
   transition: transform .25s ease-out;

@@ -69,9 +69,11 @@ export default function AuthStatus(props) {
         setAuth(isAuth)
       })
 
-      archive.readdir('/', (err, data) => {
-        if (err) throw err
-        console.log(data)
+      archive.db.watch(() => {
+        archive.db.authorized(local, (err, isAuth) => {
+          if (err) throw err
+          setAuth(isAuth)
+        })
       })
     })
   }, [archive])
@@ -94,38 +96,44 @@ export default function AuthStatus(props) {
   )
 }
 
-function Expanded({ auth, localKey, onSubmit }) {
+function Expanded({ archive, auth, localKey, onSubmit }) {
   const [keyInput, setKeyInput] = useState('')
+  const [loading, setLoading] = useState(false)
 
   function handleChange(e) {
     setKeyInput(e.target.value)
   }
 
   function handleSubmit() {
-    onSubmit(keyInput)
+    setLoading(true)
+    archive.db.authorize(Buffer.from(keyInput, 'hex'), (err) => {
+      if (err) throw err
+      setKeyInput('')
+      setLoading(false)
+    })
   }
 
   function handleCopy() {
-    console.log('TODO: copy key')
+    navigator.clipboard.writeText(localKey);
   }
 
   return auth ?
     <Fragment>
       <AuthText ok={true}>You are authorized to write to this shit list</AuthText>
-      <p>You can share this shit list to multiple devices or other people. Just copy the URL and paste it into another browser. Other copies may write to this list if you authorize them by passing their "local 🔑" into the form below.</p>
+      <p>You can share this shit list to multiple devices or other people. Just copy the URL and paste it into another browser. Other copies may write to this list if you authorize them by passing their "local <span role="img" aria-label="key">🔑</span>" into the form below.</p>
       <AuthForm>
         <Label>Add a writer:</Label>
         <InlineInput value={keyInput} onChange={handleChange}/>
-        <Button onClick={handleSubmit}>Authorize</Button>
+        <Button onClick={handleSubmit} disabled={loading}>Authorize</Button>
       </AuthForm>
     </Fragment> :
     <Fragment>
       <AuthText ok={false}>You are not currently authorized to write to this shit list.</AuthText>
-      <p>You may edit your local copy, but changes wil not be synchronized until you pass your "local 🔑" to an owner of the document and they authorize you.</p>
+      <p>You may edit your local copy, but changes wil not be synchronized until you pass your "local <span role="img" aria-label="key">🔑</span>" to an owner of the document and they authorize you.</p>
       <LocalKeySection>
-        Your local 🔑 is:
+        Your local <span role="img" aria-label="key">🔑</span> is:
         <Key>{ localKey }</Key>
-        <Button onClick={handleCopy}>Copy 🔑 to Clipboard</Button>
+        <Button onClick={handleCopy}>Copy <span role="img" aria-label="key">🔑</span> to Clipboard</Button>
       </LocalKeySection>
     </Fragment>
 }
