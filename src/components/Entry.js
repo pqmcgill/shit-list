@@ -88,6 +88,89 @@ export function DiaperEntry(props) {
   )
 }
 
+export function BottleFeedingEntry(props) {
+  const Collapsed = () => (
+    <InlineData>
+      <span>
+        Feeding - 🍼
+      </span>
+      <span>{ props.eventTime }</span>
+      <span>Logged by: { props.loggedBy }</span>
+    </InlineData>
+  )
+
+  return (
+    <ExpandableEntry color={colors.pink}>
+      {(expanded) => (
+        !expanded
+          ? <Collapsed />
+          : (
+            <Fragment>
+              <Collapsed />
+              <div>{ props.volume }</div>
+              <div>{ props.notes }</div>
+            </Fragment>
+          )
+      )}
+    </ExpandableEntry>
+  )
+}
+
+export function BreastFeedingEntry(props) {
+  const Collapsed = () => (
+    <InlineData>
+      <span>
+        Feeding - 🤱
+      </span>
+      <span>{ props.eventTime }</span>
+      <span>Logged by: { props.loggedBy }</span>
+    </InlineData>
+  )
+
+  return (
+    <ExpandableEntry color={colors.pink}>
+      {(expanded) => (
+        !expanded
+          ? <Collapsed />
+          : (
+            <Fragment>
+              <Collapsed />
+              <div>Left - { props.leftBreastDuration } Right - { props.rightBreastDuration}</div>
+              <div>{ props.notes }</div>
+            </Fragment>
+          )
+      )}
+    </ExpandableEntry>
+  )
+}
+
+export function SleepingEntry(props) {
+  const Collapsed = () => (
+    <InlineData>
+      <span>
+        Sleep - 💤
+      </span>
+      <span>{ props.startTime } - { props.endTime }</span>
+      <span>Logged by: { props.loggedBy }</span>
+    </InlineData>
+  )
+
+  return (
+    <ExpandableEntry color={colors.purple}>
+      {(expanded) => (
+        !expanded
+          ? <Collapsed />
+          : (
+            <Fragment>
+              <Collapsed />
+              <div>{ props.notes }</div>
+            </Fragment>
+          )
+      )}
+    </ExpandableEntry>
+  )
+}
+
 export default function Entry(props) {
   if (props.type === 'diaper') {
     switch(props.diaperType) {
@@ -100,6 +183,14 @@ export default function Entry(props) {
       default:
         return <DiaperEntry {...props} />
     }
+  } else if (props.type === 'feeding') {
+    if (props.feedingType === 'bottle') {
+      return <BottleFeedingEntry {...props} />
+    } else {
+      return <BreastFeedingEntry {...props} />
+    }
+  } else if (props.type === 'sleep') {
+    return <SleepingEntry {...props} />
   } else {
     return 'unknown entry type'
   }

@@ -24,6 +24,8 @@ export const colors = {
   lightRed: '#D88373',
   darkRed: '#8E3B46',
   lightBlue: '#6EC1B1',
-  darkBlue: '#477890'
+  darkBlue: '#477890',
+  pink: '#F38CAC',
+  purple: '#8A2BE2'
 }
 

@@ -11,6 +11,7 @@ const DataList = styled.div`
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow-y: scroll;
 `
 
 const ButtonWrapper = styled.div`
@@ -56,6 +57,13 @@ const mockData = [
     notes: 'I think I got the hang of this'
   },
   {
+    type: 'sleep',
+    startTime: '2:30',
+    endTime: '2:31 - PM',
+    loggedBy: 'Sam',
+    notes: 'holy hell, just go to sleep!'
+  },
+  {
     type: 'diaper',
     diaperType: 'mixed',
     eventTime: '10:56 - AM',
@@ -68,6 +76,23 @@ const mockData = [
     eventTime: '11:01 - AM',
     loggedBy: 'Pat',
     notes: 'FOR THE LOVE OF GOD!!!'
+  },
+  {
+    type: 'feeding',
+    feedingType: 'bottle',
+    eventTime: '12:20 - PM',
+    loggedBy: 'Sam',
+    volume: '100 - ML',
+    notes: 'so freakin adorable'
+  },
+  {
+    type: 'feeding',
+    feedingType: 'breast',
+    eventTime: '1:30 - AM',
+    loggedBy: 'Sam',
+    leftBreastDuration: '30 - min',
+    rightBreastDuration: '24 - min',
+    notes: 'Pat snores so loud'
   }
 ]
 
