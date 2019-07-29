@@ -43,7 +43,7 @@ export default function CreateList() {
       <div>
         <Input value={name} onChange={handleChange}/>
         <p>
-          <Button disabled={loading} onClick={handleSubmit}>Submit</Button>
+          <Button isLoading={loading} onClick={handleSubmit}>Submit</Button>
         </p>
       </div>
       { key && <Redirect to={`/list/${key}`} />}

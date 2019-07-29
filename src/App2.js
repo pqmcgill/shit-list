@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-d
 import { colors } from './style'
 import Home from './screens/Home'
 import CreateList from './screens/CreateList'
+import AddLink from './screens/AddLink2'
 import List from './screens/List'
 
 const Wrapper = styled.div`
@@ -32,6 +33,7 @@ export default function App() {
           <Switch>
             <Route exact path='/home' component={Home} />
             <Route path='/create' component={CreateList} />
+            <Route path='/addlink' component={AddLink} />
             <Route path='/list/:key' component={List} />
             <Redirect to='/home' />
           </Switch>

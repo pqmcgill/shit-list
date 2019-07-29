@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { colors } from '../style'
 
 const Button = styled.button`
@@ -25,8 +25,14 @@ const Button = styled.button`
     transform: scale(1.05);
   }
 
-  &:disabled {
+  ${props => props.isLoading && css`
     cursor: wait;
+    opacity: 0.5;
+  `}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `
 
