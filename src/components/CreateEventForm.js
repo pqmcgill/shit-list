@@ -73,8 +73,8 @@ class CreateEventForm extends Component {
   } 
 
   submit = (data) => {
-   const {onSubmit} = this.props;
-   onSubmit(data);
+   const {enter} = this.props;
+   enter(data);
   }
 
   cancel = () => {

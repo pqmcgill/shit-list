@@ -6,6 +6,7 @@ import rai from 'random-access-idb'
 import levelup from 'levelup'
 import leveljs from 'level-js'
 import Data from './Data2'
+import connectToGateway from '../lib/connectToGateway';
 
 const ShitListContainer = styled.div`
   display: flex;
@@ -21,8 +22,9 @@ export default function List(props) {
   useEffect(() => {
     const storage = rai(`shitlist-${archiveKey}`)
     const drive = hyperdrive(storage, archiveKey)
-    setArchive(drive)
-    drive.ready(() => {
+    connectToGateway(drive, (err) => {
+      setArchive(drive)
+      if (err) throw err
       drive.readFile('/name.txt', (err, data) => {
         if (err) throw err
         setName(data.toString())
@@ -31,8 +33,10 @@ export default function List(props) {
   }, [archiveKey])
 
   useEffect(() => {
-    const db = levelup(leveljs('shit-list-db', { prefix: 'shit-list:' }))
-    db.put(`shitlist-${archiveKey}`, archiveName)
+    if (archiveName) {
+      const db = levelup(leveljs('shit-list-db', { prefix: 'shit-list:' }))
+      db.put(`shitlist-${archiveKey}`, archiveName)
+    }
   }, [archiveKey, archiveName])
 
   return (
@@ -41,7 +45,7 @@ export default function List(props) {
       {archive && (
         <Fragment>
           <AuthStatus archive={ archive } />
-          <Data archive={archive} />
+          {/* <Data archive={archive} /> */}
         </Fragment>
       )}
     </ShitListContainer>

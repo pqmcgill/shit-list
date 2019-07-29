@@ -18,5 +18,5 @@ export function previousDay(day) {
 }
 
 export function format(date) {
-  return date.toLocaleDateString()
+  return date.toLocaleDateString().split('/').join('-')
 }
