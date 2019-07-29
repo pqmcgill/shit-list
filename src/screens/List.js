@@ -1,10 +1,16 @@
-import xs from 'xstream'
-import { h } from '@cycle/react'
-import { div, h2 } from '@cycle/react-dom'
+import React, { Fragment, useState, useEffect } from 'react'
 import styled from 'styled-components'
-import AuthStatus from './AuthStatus2'
+import AuthStatus from './AuthStatus'
+import hyperdrive from 'hyperdrive'
+import rai from 'random-access-idb'
+import levelup from 'levelup'
+import leveljs from 'level-js'
+import prettyHash from 'pretty-hash'
 import Data from './Data'
-import List2 from './List2'
+import connectToGateway from '../lib/connectToGateway';
+import { colors } from '../style';
+import Button from '../components/Button';
+import useLevelDB from '../hooks/useLevelDB';
 
 const ShitListContainer = styled.div`
   display: flex;
@@ -12,48 +18,60 @@ const ShitListContainer = styled.div`
   width: 100%;
 `
 
-function intent(hyperSrc, keySrc) {
-  const readKey$ = keySrc
+const Name = styled.h2`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`
 
-  const archiveReady$ = hyperSrc.select('openshitlist')
-    .take(1)
+const Hash = styled(Button)`
+  height: 2.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: ${colors.lightBlue};
+  background-color: ${colors.white};
+  border-color: ${colors.lightBlue};
+  cursor: pointer;
+`
 
-  const readListName$ = hyperSrc
-    .select('readshitlistname')
-    .map(data => data.toString())
+export default function List(props) {
+  const key = props.match.params.key
+  const [archiveName, setName] = useState()
+  const [archive, setArchive] = useState()
+  const db = useLevelDB()
 
-  return {
-    readKey$,
-    archiveReady$,
-    readListName$
+  useEffect(() => {
+    const storage = rai(`shitlist-${key}`)
+    const drive = hyperdrive(storage, key)
+    connectToGateway(drive, (err) => {
+      setArchive(drive)
+      if (err) throw err
+      drive.readFile('/name.txt', (err, data) => {
+        if (err) throw err
+        setName(data.toString())
+      })
+    })
+  }, [key])
+
+  useEffect(() => {
+    if (archiveName) {
+      db.put(`shitlist-${key}`, archiveName)
+    }
+  }, [db, key, archiveName])
+
+  function copyUrl() {
+    navigator.clipboard.writeText(window.location.href)
   }
-}
 
-function model(actions) {
-  return xs.combine(
-    actions.readKey$,
-    actions.readListName$
-  ).map(([key, name]) => ({ 
-    archiveKey: key, 
-    archiveName: name 
-  }))
-}
-
-function view(key$) {
-  return key$.map(key => (
-    h(List2, { archiveKey: key })
-  )).startWith('loading...')
-}
-
-export default function List(sources) {
-  // const dataSinks = Data(sources)
-  // const dataView$ = dataSinks.DOM
-  // const dataReducer$ = dataSinks.state
-  // const dataHyper$ = dataSinks.HYPER
-
-  const dom$ = view(sources.key$)
-
-  return {
-    DOM: dom$
-  }
+  return (
+    <ShitListContainer>
+      <Name>{ archiveName } <Hash onClick={copyUrl}>{ `📋 ${prettyHash(key)}` }</Hash></Name>
+      {archive && (
+        <Fragment>
+          <AuthStatus archive={ archive } />
+          <Data archive={archive} />
+        </Fragment>
+      )}
+    </ShitListContainer>
+  )
 }

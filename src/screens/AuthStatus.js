@@ -1,12 +1,14 @@
+import React, { useState, useEffect, Fragment } from 'react'
 import styled, { css } from 'styled-components'
-import xs from 'xstream'
-import { h } from '@cycle/react'
-import { div, p } from '@cycle/react-dom'
-import { colors } from '../style'
+
+import hyperdrive from 'hyperdrive'
+import rai from 'random-access-idb'
+
 import ShadowBox from '../components/ShadowBox'
 import Button from '../components/Button'
 import CollapseExpandButton from '../components/CollapseExpandButton'
 import Input from '../components/Input'
+import { colors } from '../style'
 
 const AuthText = styled.span`
   font-weight: 700;
@@ -51,192 +53,98 @@ const InlineInput = styled(Input)`
   flex: 1;
 `
 
-function intent(keySrc, hyperSrc, domSrc) {
-  const key$ = keySrc
+export default function AuthStatus(props) {
+  const { archive } = props
 
-  const archiveReady$ = hyperSrc
-    .select('open')
+  const [expanded, setExpanded] = useState(false)
+  const [localKey, setLocalKey] = useState()
+  const [auth, setAuth] = useState(false)
 
-  const authorized$ = hyperSrc
-    .select('auth')
+  useEffect(() => {
+    archive.ready(() => {
+      let local = archive.db.local.key
+      setLocalKey(local.toString('hex'))
+      archive.db.authorized(local, (err, isAuth) => {
+        if (err) throw err
+        setAuth(isAuth)
+      })
 
-  const expandCollapse$ = domSrc
-    .select('expand')
-    .events('click')
+      archive.db.watch(() => {
+        archive.db.authorized(local, (err, isAuth) => {
+          if (err) throw err
+          setAuth(isAuth)
+        })
+      })
+    })
+  }, [archive])
 
-  const copyToClip$ = domSrc
-    .select('clip')
-    .events('click')
-
-  const keyInput$ = domSrc
-    .select('keyInput')
-    .events('change')
-
-  const keySubmit$ = domSrc
-    .select('authorizeBtn')
-    .events('click')
-    .debug('clicked')
-    
-  return {
-    key$,
-    archiveReady$,
-    authorized$,
-    expandCollapse$,
-    copyToClip$,
-    keyInput$,
-    keySubmit$
+  const childProps = {
+    ...props,
+    localKey,
+    auth
   }
-}
 
-function model(actions) {
-  const defaultReducer$ = xs.of(function defaultReducer$(prev) {
-    return {
-      ...prev,
-      auth: false,
-      key: undefined,
-      localKey: undefined,
-      expanded: false,
-      keyInput: ''
-    }
-  });
+  function handleExpand() {
+    setExpanded(!expanded)  
+  }
 
-  const keyReducer$ = actions.key$.map(key =>
-    function keyReducer(prev) {
-      return {
-        ...prev,
-        key
-      }
-    }
-  )
-
-  const localKeyReducer$ = actions.archiveReady$
-    .map((archive) => function localKeyReducer(prev) {
-      return {
-        ...prev,
-        localKey: archive.db.local.key.toString('hex')
-      }
-    })
-
-  const authorizedReducer$ = actions.authorized$
-    .map((auth) => function authorizedReducer(prev) {
-      return {
-        ...prev,
-        auth
-      }
-    })
-
-  const expandCollapseReducer$ = actions.expandCollapse$
-    .mapTo(function expandCollapseReducer(prev) {
-      return {
-        ...prev,
-        expanded: !prev.expanded
-      }
-    })
-
-  const keyInputReducer$ = actions.keyInput$
-    .map(e => e.target.value)
-    .map(value => function keyInputReducer(prev) {
-      return {
-        ...prev,
-        keyInput: value
-      }
-    })
-
-  return xs.merge(
-    defaultReducer$,
-    keyReducer$,
-    localKeyReducer$,
-    authorizedReducer$,
-    expandCollapseReducer$,
-    keyInputReducer$
+  return (
+    <ShadowBox>
+      <CollapseExpandButton expanded={expanded} onClick={handleExpand} />
+      { expanded ? <Expanded {...childProps}/> : <Collapsed {...childProps}/>}
+    </ShadowBox>
   )
 }
 
-function view(state$) {
-  return state$.map((state) => (
-    h(ShadowBox, [
-      h(CollapseExpandButton, { sel: 'expand', expanded: state.expanded }),
-      state.expanded ? renderExpanded(state) : renderCollapsed(state)
-    ])
-  ))
+function Expanded({ archive, auth, localKey, onSubmit }) {
+  const [keyInput, setKeyInput] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  function renderCollapsed({ auth }) {
-    return [
-      h(AuthText, { ok: auth }, auth ? 'Authorized' : 'Not Authorized'),
-      auth ? ' (Expand to add a writer)' : ' (Expand for more info)'
-    ]
+  function handleChange(e) {
+    setKeyInput(e.target.value)
   }
 
-  function renderExpanded({ auth, localKey, keyInput }) {
-    return auth
-      ? [
-        h(AuthText, { ok: auth }, 'You are authorized to write to this shit list'),
-        p(['You can share this shit list to multiple devices or other people. Just copy the URL and paste it into another browser. Other copies may write to this list if you authorize them by passing their "local 🔑" into the form below.']),
-        h(AuthForm, [
-          h(Label, 'Add a writer:'),
-          h(InlineInput, { sel: 'keyInput', value: keyInput }),
-          h(Button, { sel: 'authorizeBtn' }, 'Authorize')
-        ])
-      ]
-      : [ 
-        h(AuthText, { ok: auth }, 'You are not currently authorized to write to this shit list.'),
-        p('You may edit your local copy, but changes wil not be synchronized until you pass your "local 🔑" to an owner of the document and they authorize you.'),
-        h(LocalKeySection, [
-          'Your local 🔑 is:',
-          h(Key, localKey),
-          h(Button, { sel: 'clip' }, 'Copy 🔑 to Clipboard')
-        ])
-      ]
+  function handleSubmit() {
+    setLoading(true)
+    archive.db.authorize(Buffer.from(keyInput, 'hex'), (err) => {
+      if (err) throw err
+      setKeyInput('')
+      setLoading(false)
+    })
   }
-}
 
-function hyper(actions, state$) {
-  const open$ = actions.key$.map(key => ({
-    type: 'open',
-    category: 'open',
-    key
-  }))
-
-  const checkAuth$ = actions.archiveReady$.map(({ key }) => ({
-    type: 'isAuth',
-    category: 'auth',
-    key
-  }))
-
-  const authorize$ = actions.keySubmit$
-    .map(() => state$
-      .map(state => [state.keyInput, state.key])
-      .take(1)
-    )
-    .flatten()
-    .map(([localKey, key]) => ({
-      type: 'authorize',
-      category: 'authorizing',
-      key,
-      localKey
-    })).debug('authorize')
-
-  return xs.merge(open$, checkAuth$, authorize$)
-}
-
-function clip(actions) {
-  return actions.copyToClip$
-    .map(() => actions.archiveReady$.take(1))
-    .flatten()
-    .map((archive) => archive.db.local.key.toString('hex'))
-}
-
-export default function AuthStatus(sources) {
-  const actions = intent(sources.key$, sources.HYPER, sources.DOM)
-  const reducer$ = model(actions)
-  const state$ = sources.state.stream
-  const dom$ = view(state$)
-  const hyper$ = hyper(actions, state$)
-  const clip$ = clip(actions)
-  return {
-    DOM: dom$,
-    state: reducer$,
-    HYPER: hyper$,
-    CLIP: clip$
+  function handleCopy() {
+    navigator.clipboard.writeText(localKey);
   }
+
+  return auth ?
+    <Fragment>
+      <AuthText ok={true}>You are authorized to write to this shit list</AuthText>
+      <p>You can share this shit list to multiple devices or other people. Just copy the URL and paste it into another browser. Other copies may write to this list if you authorize them by passing their "local <span role="img" aria-label="key">🔑</span>" into the form below.</p>
+      <AuthForm>
+        <Label>Add a writer:</Label>
+        <InlineInput value={keyInput} onChange={handleChange}/>
+        <Button onClick={handleSubmit} disabled={loading}>Authorize</Button>
+      </AuthForm>
+    </Fragment> :
+    <Fragment>
+      <AuthText ok={false}>You are not currently authorized to write to this shit list.</AuthText>
+      <p>You may edit your local copy, but changes wil not be synchronized until you pass your "local <span role="img" aria-label="key">🔑</span>" to an owner of the document and they authorize you.</p>
+      <LocalKeySection>
+        Your local <span role="img" aria-label="key">🔑</span> is:
+        <Key>{ localKey }</Key>
+        <Button onClick={handleCopy}>Copy <span role="img" aria-label="key">🔑</span> to Clipboard</Button>
+      </LocalKeySection>
+    </Fragment>
+}
+
+function Collapsed({ auth }) {
+  return (
+    <Fragment>
+      <AuthText ok={auth}>
+        { auth ? 'Authorized' : 'Not Authorized' }
+        { auth ? ' (Expand to add a writer)' : ' (Expand for more info)' }
+      </AuthText>
+    </Fragment>
+  )
 }

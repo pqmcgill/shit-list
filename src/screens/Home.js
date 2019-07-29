@@ -1,11 +1,12 @@
-import xs from 'xstream'
-import { h } from '@cycle/react'
-import { p, div, h3 } from '@cycle/react-dom'
-import { makeCollection } from '@cycle/state'
+import React, { useState, useEffect } from 'react'
 import styled from 'styled-components'
+import levelup from 'levelup'
+import levelJs from 'level-js'
+import { Link } from 'react-router-dom'
 import { colors } from '../style'
-import ShadowBox from '../components/ShadowBox'
 import Button from '../components/Button'
+import ShadowBox from '../components/ShadowBox';
+import useLevelDB from '../hooks/useLevelDB';
 
 const WelcomeHeader = styled.h4`
   margin: 0.5rem 1rem 1rem 1rem;
@@ -17,11 +18,7 @@ const Bold = styled.b`
   color: ${colors.darkBlue};
 `
 
-const Lists = styled.ul`
-  padding: 0;
-`
-
-const List = styled.li`
+const ShitList = styled.li`
   list-style-type: none;
   border: solid 2px ${colors.lightBlue};
   border-radius: 0.5rem;
@@ -47,9 +44,15 @@ const List = styled.li`
   }
 ` 
 
+const ShitLink = styled(Link)`
+  color: inherit;
+  text-decoration: none;
+`
+
 const NoListMsg = styled.div`
   display: flex;
   justify-content: center;
+  margin-top: 1rem;
 `
 
 const BtnWrapper = styled.div`
@@ -74,162 +77,70 @@ const AddLinkBtn = styled(Button)`
   border-color: ${colors.lightBlue};
 `
 
-function view(state$, listDom$) {
-  return xs.combine(state$, listDom$)
-    .map(([shitLists, listDom]) => (
-      div([
-        h(ShadowBox, [
-          h(WelcomeHeader, 'Welcome to ShitList!'),
-          p(['Shit lists are useful for collecting data on your newborn\'s ',
-            h(Bold, 'eating,'), 
-            ' ',
-            h(Bold, 'sleeping,'), 
-            ' and ',
-            h(Bold, 'pooping'),
-            ' habits.'
-          ]),
-          p(['Easily share your lists with your friends and family!']),
-        ]),
-
-        shitLists.length 
-          ? listDom
-          : h(NoListMsg,'You don\'t have any shit lists. Why don\'t you create one?'),
-
-        h(BtnWrapper, [
-          h(CreateBtn, { sel: 'createBtn' }, 'Create a new list'),
-          h(AddLinkBtn, { sel: 'addLinkBtn' }, 'Link an existing list')
-        ])
-      ])
-    ))
-}
-
-function model(actions) {
-  const defaultReducer$ = xs.of(
-    function defaultReducer(prev) {
-      return []
-    }
-  )
-
-  const listsReducer$ = actions.getShitLists$$
-    .flatten()
-    .map(shitLists => function listReducer(prev) {
-      return shitLists
-        .map(({ key, value }) => ({
-          key: key.toString(),
-          name: value.toString()
-        }))
-    })
-
-  return xs.merge(
-    defaultReducer$,
-    listsReducer$
+function ShitLists({ shitLists }) {
+  return (
+    <div>
+      <h3>Your Lists</h3>
+      { shitLists.map(({ key, value}) => (
+        <ShitLink to={`/list/${key}`}  key={key}>
+          <ShitList>
+            { value }
+          </ShitList>
+        </ShitLink>
+      ))}
+    </div>
   )
 }
 
-function navigation(actions) {
-  const navToCreate$ = actions.createBtnClick$
-    .mapTo('/create')
+export default function Home() {
+  const [shitLists, setShitLists] = useState([])
+  const [loading, setLoading] = useState(true)
+  const db = useLevelDB()
 
-  const navToAddLink$ = actions.addLinkBtnClick$
-    .mapTo('/addlink')
+  useEffect(() => {
+    let listAggregator = []
+    const stream = db.createReadStream({ gt: 'shitlist-', lt: 'shitlist-\xff' })
+    stream.on('data', d => listAggregator.push(d))
+      .on('error', err => { throw err })
+      .on('end', () => {
+        setShitLists(listAggregator.map(d => ({
+          key: d.key.toString().split('-')[1],
+          value: d.value.toString()
+        })))
+        setLoading(false)
+      })
+  }, [db])
 
-  return xs.merge(
-    navToCreate$,
-    navToAddLink$
-  )
-}
+  return (
+    <div>
+      <ShadowBox>
+        <WelcomeHeader>Welcome to the ShitList!</WelcomeHeader>
+        <p>
+          Shit lists are useful for collecting data on your newborn's
+          {' '}
+          <Bold>eating,</Bold>
+          {' '}
+          <Bold>sleeping,</Bold>
+          {' and '}
+          <Bold>pooping</Bold>
+          {' habits '}
+        </p>
+        <p>Easily share your lists with your friends and family!</p>
+      </ShadowBox>
 
-function intent(levelSrc, domSrc) {
-  const createBtnClick$ = domSrc
-    .select('createBtn')
-    .events('click')
-
-  const addLinkBtnClick$ = domSrc
-    .select('addLinkBtn')
-    .events('click')
-
-  const getShitLists$$ = levelSrc.read('lists')
-
-  return {
-    createBtnClick$,
-    addLinkBtnClick$,
-    getShitLists$$
-  }
-}
-
-// TODO: doesn't work. fix!
-function level() {
-  return xs.of({
-    name: 'lists',
-    type: 'query',
-    options: { gt: 'shitlist-', lt: 'shitlist-\xff' }
-  })
-}
-
-function ShitListItem(sources) {
-  const dom$ = sources.state.stream
-    .map(({ name, key }) => 
-      h(List, { key, sel: 'li' }, `${name}`)
-    ) 
-
-  const click$ = sources.DOM.select('li')
-    .events('click')
-
-  const nav$ = click$.map(() => sources.state.stream.take(1))
-    .flatten()
-    .map(({ key }) => `/list/${key.split('-')[1]}`)
-
-  return {
-    DOM: dom$,
-    router: nav$
-  }
-}
-
-export default function Home(sources) {
-  const List = makeCollection({
-    item: ShitListItem,
-    itemKey: (state, index) => String(index),
-    itemScope: key => key,
-    collectSinks: instances => {
-      return {
-        DOM: instances.pickCombine('DOM').map(listDom => div([
-          h3('Your Lists'),
-          listDom
-        ])),
-        state: instances.pickMerge('state'),
-        router: instances.pickMerge('router')
+      {loading 
+        ? <NoListMsg>Loading shit lists...</NoListMsg>
+        : shitLists.length 
+          ? <ShitLists shitLists={shitLists}/>
+          : <NoListMsg>You don't have any shit lists. Why don't you create one?</NoListMsg>
       }
-    }
-  })
 
-  const listSinks = List(sources)
-
-  const actions = intent(
-    sources.LEVEL,
-    sources.DOM
+      { !loading && (
+        <BtnWrapper>
+          <Link to='/create'><CreateBtn>Create a new list</CreateBtn></Link>
+          <Link to='/addlink'><AddLinkBtn>Link an existing list</AddLinkBtn></Link>
+        </BtnWrapper>
+      )}
+    </div>
   )
-
-  const homeReducer$ = model(actions)
-  const homeNav$ = navigation(actions)
-  const level$ = level()
-
-  const dom$ = view(
-    sources.state.stream, 
-    listSinks.DOM
-  )
-
-  const reducer$ = xs.merge(
-    homeReducer$, 
-  )
-
-  const nav$ = xs.merge(
-    homeNav$, 
-  )
-
-  return {
-    DOM: dom$,
-    router: nav$,
-    LEVEL: level$,
-    state: reducer$
-  }
 }

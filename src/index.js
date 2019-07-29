@@ -1,29 +1,10 @@
 import * as serviceWorker from './serviceWorker'
-import { run } from '@cycle/run'
-import { makeDOMDriver } from '@cycle/react-dom'
-import { makeHistoryDriver } from '@cycle/history'
-import { routerify } from 'cyclic-router'
-import { withState } from '@cycle/state'
-import hyperDriver from './drivers/hyperDriver'
-import makeLevelDriver from './drivers/levelDriver'
-import clipboardDriver from './drivers/clipboardDriver'
-import switchPath from 'switch-path'
+import React from 'react'
+import { render } from 'react-dom'
 import './index.css'
-import App from './App'
+import App from './App2'
 
-const drivers = {
-  DOM: makeDOMDriver(document.querySelector('#root')),
-  HYPER: hyperDriver,
-  HISTORY: makeHistoryDriver(),
-  LEVEL: makeLevelDriver('shit-list-db', { prefix: 'shit-list:' }),
-  CLIP: clipboardDriver
-}
-
-const Main = withState(routerify(App, switchPath, {
-  historyName: 'HISTORY'
-}))
-
-run(Main, drivers)
+render(<App />, document.querySelector('#root'))
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

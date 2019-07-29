@@ -1,172 +1,74 @@
-import xs from 'xstream'
-import debounce from 'xstream/extra/debounce'
-import delay from 'xstream/extra/delay'
-import { h } from '@cycle/react'
-import { div, button } from '@cycle/react-dom';
-import { today, nextDay, previousDay } from '../lib/day'
+import React, { useState, useEffect, Fragment } from 'react'
 import styled from 'styled-components'
-import DayNav from '../components/DayNav';
-import AddEvent from './AddEvent'
+import DayNav from '../components/DayNav'
+import CreateEventForm from '../components/CreateEventForm'
+import { today } from '../lib/day'
 
 const DataList = styled.div`
   flex: 1;
 `
 
-export default function Data(sources) {
-  const addEventSinks = AddEvent(sources)
-  const addEventDom$ = addEventSinks.DOM
-  const submit$ = addEventSinks.submit$
-  const cancel$ = addEventSinks.cancel$
+export default function Data2({ archive }) {
+  const [ls, setLs] = useState([])
+  const [day, setDay] = useState(today())
+  const [showAddForm, toggleAddForm] = useState(false)
 
-  const state$ = sources.state.stream
-  const actions = intent(sources.key$, sources.HYPER, sources.DOM)
-  const reducer$ = model(actions)
-  const dom$ = view(state$, addEventDom$)
-  const hyper$ = hyper(actions, state$, submit$, cancel$)
+  useEffect(() => {
+    readdir(day)
+  }, [day])
 
-  return {
-    DOM: dom$,
-    state: reducer$,
-    HYPER: hyper$
+  function readdir(day) {
+      archive.readdir(`/data/${day}`, (err, ls) => {
+        if (err) throw err
+        let files = []
+        if (ls.length === 0) setLs(ls)
+        ls.forEach((fileName) => {
+          archive.readFile(`/data/${day}/${fileName}`, (err, data) => {
+            if (err) throw err
+            files.push({ name: fileName, data: data.toString() })
+            if (files.length === ls.length) {
+              setLs(files.sort((a, b) => a.name < b.name))
+            }
+          })
+        })
+      })
   }
-}
 
-function intent(keySrc, hyperSrc, domSrc) {
-  const key$ = keySrc
-
-  const archiveReady$ = hyperSrc
-    .select('open')
-    .take(1)
-    .remember()
-
-  const readdirResponse$ = hyperSrc
-    .select('readdir')
-    .replaceError(err => xs.of('whoops'))
-    .map(obj => Object.entries(obj).map(([key, val]) => val.data.toString()))
-    .subscribe({})
-
-  const writeResponse$ = hyperSrc
-    .select('testWrite')
-    .map(() => archiveReady$)
-    .flatten()
-
-  const dayChange$ = domSrc
-    .select('dayNav')
-    .events('change')
-
-  const open$ = domSrc
-    .select('btn')
-    .events('click')
-
-  const cancel$ = domSrc
-    .select('form')
-    .events('cancel')
-
-  return {
-    archiveReady$,
-    key$,
-    readdirResponse$,
-    writeResponse$,
-    dayChange$,
-    open$,
-    cancel$
+  function writeData(data, day) {
+    const str = JSON.stringify(data)
+    archive.writeFile(`/data/${day}/${Date.now()}.json`, str, (err) => {
+      if (err) throw err
+      readdir(day)
+      toggleAddForm(false)
+    })
   }
-}
 
-function model(actions) {
-  const defaultReducer$ = xs.of(
-    function defaultReducer(prev) {
-      return {
-        day: today(),
-        key: null,
-        isAdding: false
-      }
-    }
-  )
+  function handleClick() {
+    toggleAddForm(true)
+  }
 
-  const dayReducer$ = actions.dayChange$
-    .map(day => function dayReducer(prev) {
-      return {
-        ...prev,
-        day 
-      }
-    })
+  function handleDayChange(day) {
+    setDay(day)
+  }
 
-  const keyReducer$ = actions.archiveReady$
-    .map(({ key }) => function keyReducer(prev) {
-      return {
-        ...prev,
-        key: key.toString('hex')
-      }
-    })
+  function handleSubmit(d) {
+    writeData(d, day)
+  }
 
-  const isAddingReducer$ = xs.merge(
-    actions.open$.mapTo(true),
-    actions.cancel$.mapTo(false),
-    actions.writeResponse$.mapTo(false)
-  ).map(bool => (
-    function addReducer(prev) {
-      return {
-        ...prev,
-        isAdding: bool,
-      }
-    }
-  ))
+  function handleCancel() {
+    toggleAddForm(false)
+  }
 
-  return xs.merge(
-    defaultReducer$,
-    keyReducer$,
-    dayReducer$,
-    isAddingReducer$,
-  )
-}
-
-function view(state$, addEventDom$) {
-  return xs.combine(state$, addEventDom$).map(([state, addEventDom]) => ([
-    div('Data'),
-    h(DataList, [
-      button({ sel: 'btn' }, 'Click!')
-    ]),
-    state.isAdding && addEventDom,
-    h(DayNav, { sel: 'dayNav' }),
-  ]))
-}
-
-function hyper(actions, state$, submit$) {
-  const readdirRequest$ = xs.merge(
-    xs.combine(
-      actions.key$.take(1),
-      actions.dayChange$,
-    ),
-    actions.writeResponse$
-  ).map(() => state$.take(1))
-  .flatten()
-  .filter(({ key, day }) => key && day)
-  .map(({ key, day }) => ({
-    type: 'readdir',
-    category: 'readdir',
-    path: `/data/${day.split('/').join('-')}`,
-    key
-  }))
-  .compose(debounce(1000))
-  .debug('readdir')
-
-  const write$ = submit$
-    .map((data) => JSON.stringify(data))
-    .map(data => state$.map(state => ({ ...state, data })).take(1))
-    .flatten()
-    .filter(({ key, day }) => key && day)
-    .map(({ key, day, data }) => ({
-      type: 'write',
-      category: 'testWrite',
-      path: `/data/${day.split('/').join('-')}/${Date.now()}.json`,
-      data,
-      key
-    }))
-    .debug('writeTest')
-
-  return xs.merge(
-    readdirRequest$,
-    write$
+  return (
+    <Fragment>
+      <DataList>
+        <ul>
+          { ls.map(f => <li key={f}>{ JSON.stringify(f) }</li>) }
+        </ul>
+        <button onClick={handleClick}>Enter Data</button>
+      </DataList>
+      { showAddForm && <CreateEventForm enter={handleSubmit} onCancel={handleCancel}/> }
+      <DayNav onChange={handleDayChange}/>
+    </Fragment>
   )
 }
