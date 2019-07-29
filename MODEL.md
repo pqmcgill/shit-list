@@ -19,3 +19,9 @@
 ## BreastFeedingEvent<a name="breastfeedingevent"></a> extends [TimedEvent](#timedevent)
 * leftBreastDuration: Int *milliseconds*
 * rightBreastDuration: Int *milliseconds*
+
+## BottleFeedingEvent<a name="bottlefeedingevent"></a> extends [TimedEvent](#timedevent)
+* volume: Int *milliliters*
+
+## PoopEvent<a name="diaperevent"></a> extends [StaticEvent](#staticevent)
+* color: String *hexidecimal color value*
