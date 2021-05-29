@@ -29,7 +29,7 @@
     "styled-components": "^4.3.2",
     "switch-path": "^1.2.0",
     "websocket-stream": "^5.5.0",
-    "ws": "^7.1.0",
+    "ws": "^7.4.6",
     "xstream": "^11.11.0"
   },
   "scripts": {
