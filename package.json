@@ -9,7 +9,7 @@
     "@cycle/run": "^5.2.0",
     "@cycle/state": "^1.2.0",
     "cyclic-router": "^6.0.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-ws": "^4.0.0",
     "hypercore": "^7.5.0",
     "hypercore-crypto": "^1.0.0",
